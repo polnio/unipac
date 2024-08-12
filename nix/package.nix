@@ -12,7 +12,7 @@ rustPlatform.buildRustPackage {
   };
 
   meta = with lib; {
-    description = "A basic flake with a shell";
+    description = "An universal package manager";
     homepage = "https://github.com/polnio/unipac";
     license = licenses.mit;
   };

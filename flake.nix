@@ -1,5 +1,5 @@
 {
-  description = "A basic flake with a shell";
+  description = "An universal package manager";
 
   inputs = {
     flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
