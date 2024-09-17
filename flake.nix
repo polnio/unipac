@@ -2,6 +2,10 @@
   description = "An universal package manager";
 
   inputs = {
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
     flake-parts.url = "github:hercules-ci/flake-parts";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -19,7 +23,7 @@
       perSystem =
         { pkgs, ... }:
         {
-          packages.default = pkgs.callPackage ./nix/package.nix { };
+          packages.default = pkgs.callPackage ./nix/package.nix { inherit (inputs) fenix; };
         };
     };
 }

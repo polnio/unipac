@@ -1,0 +1,11 @@
+[package]
+name = "unipac-dummy-plugin"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+abi_stable.workspace = true
+unipac-shared.workspace = true

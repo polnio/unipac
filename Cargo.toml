@@ -1,7 +1,12 @@
 [workspace]
 resolver = "2"
-members = ["crates/*"]
+members = ["crates/bins/*", "crates/libs/*", "crates/plugins/*"]
 
 [workspace.package]
 version = "0.0.1"
 edition = "2021"
+
+[workspace.dependencies]
+unipac-shared = { path = "crates/libs/shared" }
+
+abi_stable = "0.11.3"

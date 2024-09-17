@@ -1,6 +1,7 @@
 [package]
-name = "unipac"
+name = "unipac-shared"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
+abi_stable.workspace = true
