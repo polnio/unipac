@@ -10,7 +10,10 @@
 let
   config = builtins.fromTOML (builtins.readFile ../Cargo.toml);
 
-  toolchain = fenix.packages.${system}.stable.toolchain;
+  toolchain = fenix.packages.${system}.fromToolchainFile {
+    file = ../rust-toolchain.toml;
+    sha256 = "sha256-3aoA7PuH09g8F+60uTUQhnHrb/ARDLueSOD08ZVsWe0=";
+  };
   rustPlatform = makeRustPlatform {
     cargo = toolchain;
     rustc = toolchain;

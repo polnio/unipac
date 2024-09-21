@@ -1,13 +1,13 @@
 mod error;
 
 pub use error::Error;
-// use once_cell::sync::Lazy;
 
 use super::UNIPAC_DIR;
 use crate::Result;
 use serde::Deserialize;
+// use std::sync::LazyLock;
 
-/* static CONFIG: Lazy<Config> = Lazy::new(|| match Config::new() {
+/* static CONFIG: LazyLock<Config> = LazyLock::new(|| match Config::new() {
     Ok(config) => config,
     Err(error) => {
         eprintln!("{:?}", error);
