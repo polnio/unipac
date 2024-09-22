@@ -4,4 +4,4 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-abi_stable.workspace = true
+libc.workspace = true

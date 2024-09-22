@@ -1,7 +1,6 @@
-use abi_stable::library::LibraryError;
-
 #[derive(Debug)]
 pub enum Error {
-    OpenLibrary(LibraryError),
+    OpenLibrary(libloading::Error),
     SymbolNotFound(&'static str),
+    LibraryError(String),
 }

@@ -12,11 +12,15 @@ fn main() -> Result<()> {
         utils::args::Command::List => commands::list(),
     }
 
+    // let config = utils::Config::new()?;
+
     // for plugin in config.plugins {
     //     println!("plugin: {}", plugin);
-    //     let plugin = Plugin::load(&plugin)?;
+    //     let plugin = utils::Plugin::load(&plugin)?;
     //     println!("plugin loaded");
-    //     println!("plugin name: {}", plugin.name);
+    //     // println!("plugin name: {}", plugin.name);
+    //     let packages = plugin.list_packages();
+    //     println!("{:?}", packages);
     // }
 
     Ok(())

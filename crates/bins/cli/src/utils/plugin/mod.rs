@@ -1,13 +1,13 @@
 mod error;
 
 use crate::Result;
-use abi_stable::library::RootModule;
 pub use error::Error;
-use std::path::Path;
-use unipac_shared::SharedPlugin;
+use libloading::{Library, Symbol};
+use std::ffi::CStr;
+use unipac_shared::ListPackagesResult;
 
 pub struct Plugin {
-    pub name: &'static str,
+    lib: Library,
 }
 
 impl Plugin {
@@ -15,14 +15,30 @@ impl Plugin {
         if !path.contains(".") {
             Self::load(format!("libunipac_{}_plugin.so", path).as_str())
         } else {
-            let shared_plugin =
-                SharedPlugin::load_from_file(Path::new(path)).map_err(Error::OpenLibrary)?;
-            let name = shared_plugin
-                .name()
-                .ok_or(Error::SymbolNotFound("name"))?
-                .into();
-
-            Ok(Self { name })
+            let lib = unsafe { Library::new(path) }.map_err(Error::OpenLibrary)?;
+            Ok(Self { lib })
         }
+    }
+
+    pub fn list_packages(&self) -> Result<Vec<String>> {
+        let ffi_list_packages: Symbol<extern "C" fn() -> ListPackagesResult> =
+            unsafe { self.lib.get(b"ffi_list_packages") }
+                .map_err(|_| Error::SymbolNotFound("ffi_list_packages"))?;
+
+        let result = (ffi_list_packages)();
+        if !result.err.is_null() {
+            let err = unsafe { CStr::from_ptr(result.err) }
+                .to_string_lossy()
+                .into_owned();
+            return Err(Error::LibraryError(err).into());
+        }
+        let packages = unsafe {
+            std::slice::from_raw_parts(result.data, result.len)
+                .to_vec()
+                .into_iter()
+                .map(|p| CStr::from_ptr(p).to_string_lossy().into_owned())
+                .collect()
+        };
+        Ok(packages)
     }
 }

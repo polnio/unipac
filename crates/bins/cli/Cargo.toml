@@ -4,10 +4,11 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-abi_stable.workspace = true
 clap = { version = "4.5.18", features = ["derive"] }
 config = "0.14.0"
 derive_more = { version = "1.0.0", features = ["from"] }
 directories = "5.0.1"
+libc.workspace = true
+libloading = "0.8.5"
 serde = { version = "1.0.209", features = ["derive"] }
 unipac-shared.workspace = true

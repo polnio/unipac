@@ -8,5 +8,4 @@ edition = "2021"
 
 [workspace.dependencies]
 unipac-shared = { path = "crates/libs/shared" }
-
-abi_stable = "0.11.3"
+libc = "0.2.158"
