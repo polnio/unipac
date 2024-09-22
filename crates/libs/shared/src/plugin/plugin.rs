@@ -39,13 +39,3 @@ impl Plugin {
         Ok(packages)
     }
 }
-
-#[macro_export]
-macro_rules! export_plugin {
-    () => {
-        #[no_mangle]
-        extern "C" fn ffi_list_packages() -> unipac_shared::plugin::results::ListPackagesResult {
-            unipac_shared::plugin::results::call_list_packages(list_packages)
-        }
-    };
-}
