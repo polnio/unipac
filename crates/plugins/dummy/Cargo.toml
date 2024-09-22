@@ -8,4 +8,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 unipac-shared.workspace = true
-libc.workspace = true
+safer-ffi.workspace = true

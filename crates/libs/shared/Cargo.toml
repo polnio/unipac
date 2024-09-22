@@ -7,5 +7,5 @@ edition.workspace = true
 plugin-loader = []
 
 [dependencies]
-libc.workspace = true
 libloading = "0.8.5"
+safer-ffi.workspace = true

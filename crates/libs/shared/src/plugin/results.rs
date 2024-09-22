@@ -1,51 +1,34 @@
-use std::ffi::CString;
-use libc::{c_char, size_t};
+use safer_ffi::prelude::*;
 
 #[repr(C)]
+#[derive_ReprC]
 pub struct ListPackagesResult {
-    pub err: *mut c_char,
-    pub data: *mut *mut c_char,
-    pub len: size_t,
+    pub err: Option<str::Box>,
+    pub data: Option<c_slice::Box<str::Box>>,
 }
 
-impl Drop for ListPackagesResult {
-    fn drop(&mut self) {
-        unsafe {
-            if !self.err.is_null() {
-                let _err = CString::from_raw(self.err);
-            }
-            if !self.data.is_null() {
-                let data = Vec::from_raw_parts(self.data, self.len, self.len);
-                for p in data {
-                    let _p = CString::from_raw(p);
-                }
-            }
-        }
-    }
-}
-
-pub fn call_list_packages(list_packages: fn() -> Result<Vec<String>, String>) -> ListPackagesResult {
+pub fn call_list_packages(
+    list_packages: fn() -> Result<Vec<String>, String>,
+) -> ListPackagesResult {
     let result = match list_packages() {
         Ok(result) => result,
         Err(err) => {
-            let err = CString::new(err).unwrap_or_else(|_| c"Unknown Error".to_owned()).into_raw();
             return ListPackagesResult {
-                data: std::ptr::null_mut(),
-                len: 0,
-                err,
+                data: None,
+                err: Some(err.as_str().into()),
             };
         }
     };
 
-    let c_result = result
+    let result = result
         .into_iter()
-        .filter_map(|p| Some(CString::new(p).ok()?.into_raw()))
-        .collect::<Vec<_>>();
-    let (data, len, _) = c_result.into_raw_parts();
+        .map(str::Box::from)
+        .collect::<Vec<_>>()
+        .into_boxed_slice()
+        .into();
 
     ListPackagesResult {
-        data,
-        len,
-        err: std::ptr::null_mut(),
+        data: Some(result),
+        err: None,
     }
 }

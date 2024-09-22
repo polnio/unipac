@@ -8,4 +8,4 @@ edition = "2021"
 
 [workspace.dependencies]
 unipac-shared = { path = "crates/libs/shared" }
-libc = "0.2.158"
+safer-ffi = "0.1.13"

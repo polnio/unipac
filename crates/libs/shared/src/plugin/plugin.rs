@@ -1,7 +1,6 @@
 pub use super::error::Error;
 use super::results::ListPackagesResult;
 use libloading::{Library, Symbol};
-use std::ffi::CStr;
 
 pub struct Plugin {
     lib: Library,
@@ -22,20 +21,16 @@ impl Plugin {
             unsafe { self.lib.get(b"ffi_list_packages") }
                 .map_err(|_| Error::SymbolNotFound("ffi_list_packages"))?;
 
-        let result = (ffi_list_packages)();
-        if !result.err.is_null() {
-            let err = unsafe { CStr::from_ptr(result.err) }
-                .to_string_lossy()
-                .into_owned();
-            return Err(Error::LibraryError(err).into());
+        let result = ffi_list_packages();
+        if let Some(err) = result.err {
+            return Err(Error::LibraryError(err.into()).into());
         }
-        let packages = unsafe {
-            std::slice::from_raw_parts(result.data, result.len)
-                .to_vec()
-                .into_iter()
-                .map(|p| CStr::from_ptr(p).to_string_lossy().into_owned())
-                .collect()
-        };
+        let packages = result
+            .data
+            .unwrap()
+            .into_iter()
+            .map(|p| p.to_string())
+            .collect::<Vec<_>>();
         Ok(packages)
     }
 }
