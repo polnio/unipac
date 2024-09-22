@@ -1,5 +1,6 @@
-use super::{config, plugin};
+use super::config;
 use derive_more::From;
+use unipac_shared::plugin;
 
 #[derive(Debug, From)]
 pub enum Error {

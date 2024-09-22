@@ -1,8 +1,4 @@
-use libc::{c_char, size_t};
+pub mod plugin;
 
-#[repr(C)]
-pub struct ListPackagesResult {
-    pub err: *const c_char,
-    pub data: *const *const c_char,
-    pub len: size_t,
-}
+#[cfg(feature = "plugin-loader")]
+pub use plugin::Plugin;

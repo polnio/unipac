@@ -1,17 +1,14 @@
-mod error;
-
-use crate::Result;
-pub use error::Error;
+pub use super::error::Error;
+use super::results::ListPackagesResult;
 use libloading::{Library, Symbol};
 use std::ffi::CStr;
-use unipac_shared::ListPackagesResult;
 
 pub struct Plugin {
     lib: Library,
 }
 
 impl Plugin {
-    pub fn load(path: &str) -> Result<Self> {
+    pub fn load(path: &str) -> Result<Self, Error> {
         if !path.contains(".") {
             Self::load(format!("libunipac_{}_plugin.so", path).as_str())
         } else {
@@ -20,7 +17,7 @@ impl Plugin {
         }
     }
 
-    pub fn list_packages(&self) -> Result<Vec<String>> {
+    pub fn list_packages(&self) -> Result<Vec<String>, Error> {
         let ffi_list_packages: Symbol<extern "C" fn() -> ListPackagesResult> =
             unsafe { self.lib.get(b"ffi_list_packages") }
                 .map_err(|_| Error::SymbolNotFound("ffi_list_packages"))?;
@@ -41,4 +38,14 @@ impl Plugin {
         };
         Ok(packages)
     }
+}
+
+#[macro_export]
+macro_rules! export_plugin {
+    () => {
+        #[no_mangle]
+        extern "C" fn ffi_list_packages() -> unipac_shared::plugin::results::ListPackagesResult {
+            unipac_shared::plugin::results::call_list_packages(list_packages)
+        }
+    };
 }

@@ -705,7 +705,6 @@ dependencies = [
  "derive_more",
  "directories",
  "libc",
- "libloading",
  "serde",
  "unipac-shared",
 ]
@@ -723,6 +722,7 @@ name = "unipac-shared"
 version = "0.0.1"
 dependencies = [
  "libc",
+ "libloading",
 ]
 
 [[package]]
