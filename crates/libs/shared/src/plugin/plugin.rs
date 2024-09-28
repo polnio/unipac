@@ -1,4 +1,4 @@
-pub use super::error::Error;
+use super::error::Error;
 use super::results::ListPackagesResult;
 use libloading::{Library, Symbol};
 
@@ -22,15 +22,12 @@ impl Plugin {
                 .map_err(|_| Error::SymbolNotFound("ffi_list_packages"))?;
 
         let result = ffi_list_packages();
-        if let Some(err) = result.err {
-            return Err(Error::LibraryError(err.into()).into());
-        }
-        let packages = result
-            .data
-            .unwrap()
-            .into_iter()
-            .map(|p| p.to_string())
-            .collect::<Vec<_>>();
+        let data = match (result.data, result.err) {
+            (Some(data), None) => data,
+            (None, Some(err)) => return Err(Error::LibraryError(err.into()).into()),
+            _ => return Err(Error::BadResponse),
+        };
+        let packages = data.into_iter().map(|p| p.to_string()).collect::<Vec<_>>();
         Ok(packages)
     }
 }
