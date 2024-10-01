@@ -1,5 +1,5 @@
 [package]
-name = "unipac-dummy-plugin"
+name = "unipac-example-plugin"
 version.workspace = true
 edition.workspace = true
 

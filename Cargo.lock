@@ -941,6 +941,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "unipac-example-plugin"
+version = "0.0.1"
+dependencies = [
+ "safer-ffi",
+ "unipac-shared",
+]
+
+[[package]]
 name = "unipac-shared"
 version = "0.0.1"
 dependencies = [
