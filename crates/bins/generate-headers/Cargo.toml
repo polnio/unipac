@@ -1,0 +1,7 @@
+[package]
+name = "generate-headers"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+unipac-shared = { workspace = true, features = ["headers"] }

@@ -5,6 +5,7 @@ edition.workspace = true
 
 [features]
 plugin-loader = []
+headers = ["safer-ffi/headers"]
 
 [dependencies]
 libloading = "0.8.5"

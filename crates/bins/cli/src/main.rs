@@ -20,7 +20,7 @@ fn main() -> Result<()> {
         println!("plugin loaded");
         // println!("plugin name: {}", plugin.name);
         let packages = plugin.list_packages();
-        println!("{:?}", packages);
+        println!("{:?}\n", packages);
     }
 
     Ok(())

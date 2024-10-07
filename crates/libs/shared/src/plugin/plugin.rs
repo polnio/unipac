@@ -24,10 +24,18 @@ impl Plugin {
         let result = ffi_list_packages();
         let data = match (result.data, result.err) {
             (Some(data), None) => data,
-            (None, Some(err)) => return Err(Error::LibraryError(err.into()).into()),
+            (None, Some(err)) => return Err(Error::LibraryError(err.into_string()).into()),
             _ => return Err(Error::BadResponse),
         };
-        let packages = data.into_iter().map(|p| p.to_string()).collect::<Vec<_>>();
+
+        println!("{:?}", data);
+
+        let packages = data
+            .to_vec()
+            .into_iter()
+            .map(|p| p.into_string())
+            .collect::<Vec<_>>();
+
         Ok(packages)
     }
 }

@@ -320,6 +320,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "320bea982e85d42441eb25c49b41218e7eaa2657e8f90bc4eca7437376751e23"
 
 [[package]]
+name = "generate-headers"
+version = "0.0.1"
+dependencies = [
+ "unipac-shared",
+]
+
+[[package]]
 name = "generic-array"
 version = "0.14.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -367,6 +374,12 @@ dependencies = [
  "equivalent",
  "hashbrown 0.14.5",
 ]
+
+[[package]]
+name = "inventory"
+version = "0.3.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f958d3d68f4167080a18141e10381e7634563984a537f2a49a30fd8e53ac5767"
 
 [[package]]
 name = "is_terminal_polyfill"
@@ -488,6 +501,10 @@ dependencies = [
  "dlv-list",
  "hashbrown 0.13.2",
 ]
+
+[[package]]
+name = "pacman"
+version = "0.0.1"
 
 [[package]]
 name = "paste"
@@ -674,6 +691,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "435fdd58b61a6f1d8545274c1dfa458e905ff68c166e65e294a0130ef5e675bd"
 dependencies = [
  "extern-c",
+ "inventory",
  "libc",
  "macro_rules_attribute",
  "paste",
@@ -929,14 +947,6 @@ dependencies = [
  "derive_more",
  "directories",
  "serde",
- "unipac-shared",
-]
-
-[[package]]
-name = "unipac-dummy-plugin"
-version = "0.0.1"
-dependencies = [
- "safer-ffi",
  "unipac-shared",
 ]
 
