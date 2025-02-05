@@ -4,7 +4,10 @@ case "$1" in
   list_packages)
     echo "Package name,id,version,description"
     echo "Package Example plugin,example,1.2.3,This is an example plugin"
-    echo "Progress 100"
+    for i in {1..10}; do
+      sleep 0.5
+      echo "Progress $((i*10))"
+    done
     ;;
   *) echo "Error Unknown command \"$1\"" ;;
 esac

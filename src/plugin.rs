@@ -7,7 +7,7 @@ use std::thread::JoinHandle;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Response {
-    Progress(u64),
+    Progress(u8),
     Response(String),
     Package(Package),
     Error(String),
@@ -34,6 +34,7 @@ pub struct Plugin {
     pub path: String,
     response_sender: mpsc::Sender<Response>,
     response_receiver: mpsc::Receiver<Response>,
+    progress_sender: mpsc::Sender<u8>,
 }
 
 macro_rules! impl_plugin_inner {
@@ -61,12 +62,13 @@ impl_plugin!(pub get_id: () => String);
 impl_plugin!(pub get_name: () => String);
 impl_plugin!(pub list_packages: () => Vec<Package>);
 impl Plugin {
-    pub fn new(path: String) -> Self {
+    pub fn new(path: String, progress_sender: mpsc::Sender<u8>) -> Self {
         let (response_sender, response_receiver) = mpsc::channel();
         Self {
             path: path.into(),
             response_sender,
             response_receiver,
+            progress_sender,
         }
     }
     fn get_response(&self) -> Result<String> {
@@ -74,6 +76,8 @@ impl Plugin {
             let response = self.response_receiver.recv().unwrap();
             match response {
                 Response::Response(response) => return Ok(response),
+                Response::Progress(progress) => self.progress_sender.send(progress).unwrap(),
+
                 Response::Error(error) => bail!(error),
                 _ => continue,
             }
@@ -84,8 +88,11 @@ impl Plugin {
         loop {
             match self.response_receiver.recv().unwrap() {
                 Response::Package(package) => packages.push(package),
-                Response::Progress(progress) if progress == 100 => {
-                    break;
+                Response::Progress(progress) => {
+                    self.progress_sender.send(progress).unwrap();
+                    if progress == 100 {
+                        break;
+                    }
                 }
                 Response::Error(error) => bail!(error),
                 _ => continue,

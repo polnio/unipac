@@ -12,6 +12,7 @@ pub use plugin::Plugin;
 
 use anyhow::{Context as _, Result};
 use clap::Parser as _;
+use indicatif::ProgressBar;
 
 fn main() -> Result<()> {
     let args = Args::parse();
@@ -27,10 +28,22 @@ fn main() -> Result<()> {
     };
 
     for plugin in config.general.plugins {
-        let plugin = Plugin::new(plugin);
+        let (progress_sender, progress_receiver) = std::sync::mpsc::channel();
+        let plugin = Plugin::new(plugin, progress_sender);
         let id = plugin.get_id().context("Failed to get id")?;
         let name = plugin.get_name().context("Failed to get name")?;
+        let pbh = std::thread::spawn(move || {
+            let pb = ProgressBar::new(100);
+            while let Ok(progress) = progress_receiver.recv() {
+                pb.set_position(progress as u64);
+                if progress == 100 {
+                    pb.finish();
+                    break;
+                }
+            }
+        });
         let packages = plugin.list_packages().context("Failed to list packages")?;
+        pbh.join().unwrap();
         println!(
             "------\nid: {}\nname: {}\npackages: {:?}",
             id, name, packages
