@@ -1,0 +1,2 @@
+[general]
+plugins = ["$CARGO_MANIFEST_DIR/examples/bash/plugin.sh"]
