@@ -38,7 +38,7 @@ pub struct Plugin {
 }
 
 macro_rules! impl_plugin_inner {
-    ($vis:vis $name:ident : ($($field:ident : $type:ty),*) => $return:ty, $getter:ident) => {
+    ($vis:vis fn $name:ident ($($field:ident : $type:ty),*) -> $return:ty, $getter:ident) => {
         impl Plugin {
             $vis fn $name(&self, $($field: $type),*) -> Result<$return> {
                 let handle = self.start_subcommand(stringify!($name), vec![$($field),*]);
@@ -50,17 +50,17 @@ macro_rules! impl_plugin_inner {
     };
 }
 macro_rules! impl_plugin {
-    ($vis:vis $name:ident : ($($field:ident : $type:ty),*) => Vec<Package>) => {
-        impl_plugin_inner!($vis $name : ($($field : $type),*) => Vec<Package>, get_packages);
+    ($vis:vis fn $name:ident ($($field:ident : $type:ty),*) -> Vec<Package>) => {
+        impl_plugin_inner!($vis fn $name ($($field : $type),*) -> Vec<Package>, get_packages);
     };
-    ($vis:vis $name:ident : ($($field:ident : $type:ty),*) => String) => {
-        impl_plugin_inner!($vis $name : ($($field : $type),*) => String, get_response);
+    ($vis:vis fn $name:ident ($($field:ident : $type:ty),*) -> String) => {
+        impl_plugin_inner!($vis fn $name ($($field : $type),*) -> String, get_response);
     };
 }
 
-impl_plugin!(pub get_id: () => String);
-impl_plugin!(pub get_name: () => String);
-impl_plugin!(pub list_packages: () => Vec<Package>);
+impl_plugin!(pub fn get_id() -> String);
+impl_plugin!(pub fn get_name() -> String);
+impl_plugin!(pub fn list_packages() -> Vec<Package>);
 impl Plugin {
     pub fn new(path: String, progress_sender: mpsc::Sender<u8>) -> Self {
         let (response_sender, response_receiver) = mpsc::channel();
