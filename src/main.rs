@@ -18,25 +18,50 @@ use spinners::Spinners;
 fn main() -> Result<()> {
     let args = Args::parse();
     let config = Config::from_opt_file(args.config_path)?;
-    let spinner = Spinners::new();
+    let spinners = Spinners::new();
 
-    for plugin in config.general.plugins {
-        let (progress_sender, progress_receiver) = std::sync::mpsc::channel();
-        let plugin = Plugin::new(plugin, progress_sender);
-        let id = plugin.get_id().context("Failed to get id")?;
-        let name = plugin.get_name().context("Failed to get name")?;
-        let spinner = spinner.add(name.clone());
-        let pbh = std::thread::spawn(move || {
-            while let Ok(progress) = progress_receiver.recv() {
-                spinner.set(progress);
-                if progress == 100 {
-                    spinner.finish();
-                    break;
+    let handles = config
+        .general
+        .plugins
+        .into_iter()
+        .map(|plugin| {
+            // Simulate different speeds
+            std::thread::sleep(std::time::Duration::from_secs(2));
+            let (progress_sender, progress_receiver) = std::sync::mpsc::channel();
+            let plugin = Plugin::new(plugin, progress_sender);
+            let id = plugin.get_id().context("Failed to get id")?;
+            let name = plugin.get_name().context("Failed to get name")?;
+            let spinner = spinners.add(name.clone());
+            let pbh = std::thread::spawn(move || {
+                while let Ok(progress) = progress_receiver.recv() {
+                    spinner.set(progress);
+                    if progress == 100 {
+                        spinner.finish();
+                        break;
+                    }
                 }
-            }
-        });
-        let packages = plugin.list_packages().context("Failed to list packages")?;
-        pbh.join().unwrap();
+            });
+            let ph = std::thread::spawn(move || {
+                plugin.list_packages().context("Failed to list packages")
+            });
+            anyhow::Ok((id, name, pbh, ph))
+        })
+        // TODO: Handle errors
+        .filter_map(|r| r.ok())
+        .collect::<Vec<_>>()
+        .into_iter()
+        .map(|(id, name, pbh, ph)| {
+            let packages = ph.join().unwrap()?;
+            pbh.join().unwrap();
+            anyhow::Ok((id, name, packages))
+        })
+        // TODO: Handle errors
+        .filter_map(|r| r.ok())
+        .collect::<Vec<_>>();
+
+    spinners.clear().unwrap();
+
+    for (id, name, packages) in handles {
         println!(
             "------\nid: {}\nname: {}\npackages: {:?}",
             id, name, packages

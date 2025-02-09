@@ -21,6 +21,9 @@ impl Spinners {
         pb.set_message(name);
         Spinner(pb)
     }
+    pub fn clear(&self) -> std::io::Result<()> {
+        self.0.clear()
+    }
 }
 
 impl Spinner {
@@ -28,6 +31,6 @@ impl Spinner {
         self.0.set_position(progress as u64);
     }
     pub fn finish(&self) {
-        self.0.finish_and_clear();
+        self.0.finish();
     }
 }

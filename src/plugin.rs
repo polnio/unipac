@@ -65,7 +65,7 @@ impl Plugin {
     pub fn new(path: String, progress_sender: mpsc::Sender<u8>) -> Self {
         let (response_sender, response_receiver) = mpsc::channel();
         Self {
-            path: path.into(),
+            path,
             response_sender,
             response_receiver,
             progress_sender,
