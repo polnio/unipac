@@ -25,8 +25,8 @@ fn main() -> Result<()> {
         .plugins
         .into_iter()
         .map(|plugin| {
-            // Simulate different speeds
-            std::thread::sleep(std::time::Duration::from_secs(2));
+            // DEBUG: Simulate different speeds
+            // std::thread::sleep(std::time::Duration::from_secs(2));
             let (progress_sender, progress_receiver) = std::sync::mpsc::channel();
             let plugin = Plugin::new(plugin, progress_sender);
             let id = plugin.get_id().context("Failed to get id")?;
@@ -46,17 +46,28 @@ fn main() -> Result<()> {
             });
             anyhow::Ok((id, name, pbh, ph))
         })
-        // TODO: Handle errors
-        .filter_map(|r| r.ok())
+        .filter_map(|r| match r {
+            Ok(r) => Some(r),
+            Err(err) => {
+                spinners.clear().unwrap();
+                eprintln!("Error: {:#}", err);
+                None
+            }
+        })
         .collect::<Vec<_>>()
         .into_iter()
-        .map(|(id, name, pbh, ph)| {
-            let packages = ph.join().unwrap()?;
+        .filter_map(|(id, name, pbh, ph)| {
+            let packages = ph.join().unwrap();
             pbh.join().unwrap();
-            anyhow::Ok((id, name, packages))
+            match packages {
+                Ok(packages) => Some((id, name, packages)),
+                Err(err) => {
+                    spinners.clear().unwrap();
+                    eprintln!("[{}] Error: {:#}", name, err);
+                    None
+                }
+            }
         })
-        // TODO: Handle errors
-        .filter_map(|r| r.ok())
         .collect::<Vec<_>>();
 
     spinners.clear().unwrap();

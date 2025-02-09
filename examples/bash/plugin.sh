@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 case "$1" in
   get_id) echo "Response example" ;;
   get_name) echo "Response My bash example plugin" ;;
