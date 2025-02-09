@@ -29,14 +29,63 @@ impl From<Result<Package>> for Response {
     }
 }
 
+pub struct PluginBuilderPath(String);
+pub struct PluginBuilderPathEmpty;
+#[derive(Debug, Clone)]
+pub struct PluginBuilder<Path> {
+    path: Path,
+    progress_sender: Option<mpsc::Sender<u8>>,
+    end_sender: Option<mpsc::Sender<()>>,
+}
+impl Default for PluginBuilder<PluginBuilderPathEmpty> {
+    fn default() -> Self {
+        Self {
+            path: PluginBuilderPathEmpty,
+            progress_sender: None,
+            end_sender: None,
+        }
+    }
+}
+impl PluginBuilder<PluginBuilderPathEmpty> {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+impl<Path> PluginBuilder<Path> {
+    pub fn path(self, path: String) -> PluginBuilder<PluginBuilderPath> {
+        PluginBuilder {
+            path: PluginBuilderPath(path),
+            progress_sender: self.progress_sender,
+            end_sender: self.end_sender,
+        }
+    }
+    pub fn progress_sender(self, progress_sender: mpsc::Sender<u8>) -> Self {
+        Self {
+            progress_sender: Some(progress_sender),
+            ..self
+        }
+    }
+    pub fn end_sender(self, end_sender: mpsc::Sender<()>) -> Self {
+        Self {
+            end_sender: Some(end_sender),
+            ..self
+        }
+    }
+}
+impl PluginBuilder<PluginBuilderPath> {
+    pub fn build(self) -> Plugin {
+        Plugin::new(self.path.0, self.progress_sender, self.end_sender)
+    }
+}
+
 #[derive(Debug)]
 pub struct Plugin {
     pub path: String,
     response_sender: mpsc::Sender<Response>,
     // response_receiver: mpsc::Receiver<Response>,
     response_receiver: tokio::sync::Mutex<mpsc::Receiver<Response>>,
-    progress_sender: mpsc::Sender<u8>,
-    end_sender: mpsc::Sender<()>,
+    progress_sender: Option<mpsc::Sender<u8>>,
+    end_sender: Option<mpsc::Sender<()>>,
 }
 
 macro_rules! impl_plugin_inner {
@@ -60,14 +109,23 @@ macro_rules! impl_plugin {
     };
 }
 
+async fn send_opt<T>(sender: Option<&mpsc::Sender<T>>, value: T) {
+    if let Some(sender) = sender {
+        let _ = sender.send(value).await;
+    }
+}
+
 impl_plugin!(pub async fn get_id() -> String);
 impl_plugin!(pub async fn get_name() -> String);
 impl_plugin!(pub async fn list_packages() -> Vec<Package>);
 impl Plugin {
-    pub fn new(
+    pub fn builder() -> PluginBuilder<PluginBuilderPathEmpty> {
+        PluginBuilder::new()
+    }
+    fn new(
         path: String,
-        progress_sender: mpsc::Sender<u8>,
-        end_sender: mpsc::Sender<()>,
+        progress_sender: Option<mpsc::Sender<u8>>,
+        end_sender: Option<mpsc::Sender<()>>,
     ) -> Self {
         let (response_sender, response_receiver) = mpsc::channel(100);
         Self {
@@ -84,13 +142,15 @@ impl Plugin {
             let response = response_receiver.recv().await.unwrap();
             match response {
                 Response::Response(response) => return Ok(response),
-                Response::Progress(progress) => self.progress_sender.send(progress).await.unwrap(),
+                Response::Progress(progress) => {
+                    send_opt(self.progress_sender.as_ref(), progress).await
+                }
                 Response::End => {
-                    self.end_sender.send(()).await.unwrap();
+                    send_opt(self.end_sender.as_ref(), ()).await;
                     bail!("Ended without response")
                 }
                 Response::Error(error) => {
-                    self.end_sender.send(()).await.unwrap();
+                    send_opt(self.end_sender.as_ref(), ()).await;
                     bail!(error)
                 }
                 _ => {}
@@ -104,17 +164,17 @@ impl Plugin {
             match response_receiver.recv().await.unwrap() {
                 Response::Package(package) => packages.push(package),
                 Response::Progress(progress) => {
-                    self.progress_sender.send(progress).await.unwrap();
+                    send_opt(self.progress_sender.as_ref(), progress).await;
                     if progress == 100 {
                         break;
                     }
                 }
                 Response::End => {
-                    self.end_sender.send(()).await.unwrap();
+                    send_opt(self.end_sender.as_ref(), ()).await;
                     break;
                 }
                 Response::Error(error) => {
-                    self.end_sender.send(()).await.unwrap();
+                    send_opt(self.end_sender.as_ref(), ()).await;
                     bail!(error)
                 }
                 _ => {}

@@ -33,7 +33,11 @@ async fn main() -> Result<()> {
             // std::thread::sleep(std::time::Duration::from_secs(2));
             let (progress_sender, mut progress_receiver) = mpsc::channel(100);
             let (end_sender, mut end_receiver) = mpsc::channel(100);
-            let plugin = Plugin::new(plugin, progress_sender, end_sender);
+            let plugin = Plugin::builder()
+                .path(plugin)
+                .progress_sender(progress_sender)
+                .end_sender(end_sender)
+                .build();
             let id = plugin
                 .get_id()
                 .await_blocking()
