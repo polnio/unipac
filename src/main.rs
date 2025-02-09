@@ -3,6 +3,7 @@ mod config;
 mod dirs;
 mod package;
 mod plugin;
+mod prelude;
 mod spinners;
 
 pub use args::Args;
@@ -11,35 +12,11 @@ pub use dirs::PROJECT_DIRS;
 pub use package::Package;
 pub use plugin::Plugin;
 
+use crate::prelude::*;
+use crate::spinners::Spinners;
 use anyhow::{Context as _, Result};
 use clap::Parser as _;
-use spinners::Spinners;
-use std::future::Future;
-use tokio::runtime::Handle;
-use tokio::task::JoinSet;
-
-trait IteratorExt<T> {
-    fn to_set(self) -> JoinSet<T>;
-}
-impl<I, F, T> IteratorExt<T> for I
-where
-    T: Send + 'static,
-    F: Future<Output = T> + Send + 'static,
-    I: Iterator<Item = F> + Sized,
-{
-    fn to_set(self) -> JoinSet<T> {
-        JoinSet::from_iter(self)
-    }
-}
-
-trait FutureExt<T> {
-    fn await_blocking(self) -> T;
-}
-impl<T, F: Future<Output = T> + Send> FutureExt<T> for F {
-    fn await_blocking(self) -> T {
-        tokio::task::block_in_place(|| Handle::current().block_on(self))
-    }
-}
+use tokio::sync::mpsc;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -54,8 +31,8 @@ async fn main() -> Result<()> {
         .map(|plugin| {
             // DEBUG: Simulate different speeds
             // std::thread::sleep(std::time::Duration::from_secs(2));
-            let (progress_sender, mut progress_receiver) = tokio::sync::mpsc::channel(100);
-            let (end_sender, mut end_receiver) = tokio::sync::mpsc::channel(100);
+            let (progress_sender, mut progress_receiver) = mpsc::channel(100);
+            let (end_sender, mut end_receiver) = mpsc::channel(100);
             let plugin = Plugin::new(plugin, progress_sender, end_sender);
             let id = plugin
                 .get_id()
@@ -65,9 +42,8 @@ async fn main() -> Result<()> {
                 .get_name()
                 .await_blocking()
                 .context("Failed to get name")?;
-            let spinner = spinners.add(name.clone());
-            spinner.set(0);
             let spinners = spinners.clone();
+            let spinner = spinners.add(name.clone());
             anyhow::Ok(async move {
                 let pbh = async {
                     loop {
