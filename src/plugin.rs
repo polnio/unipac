@@ -1,8 +1,10 @@
 use crate::{Package, Result};
 use anyhow::{bail, Context as _};
+use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt as _, BufReader};
 use tokio::process::Command;
 use tokio::sync::mpsc;
+use tokio::sync::Mutex;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Response {
@@ -82,7 +84,7 @@ impl PluginBuilder<PluginBuilderPath> {
 pub struct Plugin {
     pub path: String,
     response_sender: mpsc::Sender<Response>,
-    response_receiver: tokio::sync::Mutex<mpsc::Receiver<Response>>,
+    response_receiver: Mutex<mpsc::Receiver<Response>>,
     progress_sender: Option<mpsc::Sender<u8>>,
     end_sender: Option<mpsc::Sender<()>>,
 }
@@ -187,7 +189,7 @@ impl Plugin {
         let mut cmd = Command::new("bash")
             .arg("-c")
             .arg(format!("{} {} {}", path, command, args.join(" ")))
-            .stdout(std::process::Stdio::piped())
+            .stdout(Stdio::piped())
             .spawn()
             .context("Failed to run plugin")?;
         let stdout = cmd.stdout.as_mut().context("Failed to get stdout")?;

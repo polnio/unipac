@@ -1,6 +1,6 @@
-use std::borrow::Cow;
-
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use std::borrow::Cow;
+use std::io;
 
 #[derive(Debug, Clone, Default)]
 pub struct Spinners(MultiProgress);
@@ -21,7 +21,7 @@ impl Spinners {
         pb.set_message(name);
         Spinner(pb)
     }
-    pub fn clear(&self) -> std::io::Result<()> {
+    pub fn clear(&self) -> io::Result<()> {
         self.0.clear()
     }
 }

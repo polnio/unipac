@@ -16,6 +16,7 @@ use crate::prelude::*;
 use crate::spinners::Spinners;
 use anyhow::{Context as _, Result};
 use clap::Parser as _;
+use tokio::select;
 use tokio::sync::mpsc;
 
 #[tokio::main]
@@ -49,7 +50,7 @@ async fn main() -> Result<()> {
             anyhow::Ok(async move {
                 let pbh = async {
                     loop {
-                        tokio::select! {
+                        select! {
                             _ = end_receiver.recv() => break,
                             Some(progress) = progress_receiver.recv() => {
                                 spinner.set(progress);

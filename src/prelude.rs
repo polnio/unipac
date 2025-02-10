@@ -1,6 +1,6 @@
 use std::future::Future;
 use tokio::runtime::Handle;
-use tokio::task::JoinSet;
+use tokio::task::{self, JoinSet};
 
 pub trait IteratorExt<T> {
     fn to_set(self) -> JoinSet<T>;
@@ -21,6 +21,6 @@ pub trait FutureExt<T> {
 }
 impl<T, F: Future<Output = T> + Send> FutureExt<T> for F {
     fn await_blocking(self) -> T {
-        tokio::task::block_in_place(|| Handle::current().block_on(self))
+        task::block_in_place(|| Handle::current().block_on(self))
     }
 }
