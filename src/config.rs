@@ -25,12 +25,11 @@ impl Config {
         let is_default = path.is_none();
         let path = path.unwrap_or_else(|| PROJECT_DIRS.config_dir().join("config.toml"));
 
-        let config = match (Config::from_file(&path), is_default) {
-            (Ok(config), _) => config,
-            (Err(_), true) => Config::default(),
-            (Err(err), false) => return Err(err),
-        };
+        if is_default && !path.exists() {
+            return Ok(Config::default());
+        }
 
+        let config = Config::from_file(&path).context("Failed to parse config file")?;
         Ok(config)
     }
 }
