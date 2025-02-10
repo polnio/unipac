@@ -2,6 +2,6 @@
 plugins = [
   "$CARGO_MANIFEST_DIR/examples/bash/plugin.sh",
   # "$CARGO_MANIFEST_DIR/examples/bash/plugin.sh"
-  "$CARGO_MANIFEST_DIR/examples/test_error/plugin.sh",
-  "$CARGO_MANIFEST_DIR/examples/test_error/with_name.sh",
+  # "$CARGO_MANIFEST_DIR/examples/test_error/plugin.sh",
+  # "$CARGO_MANIFEST_DIR/examples/test_error/with_name.sh",
 ]

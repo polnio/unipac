@@ -82,7 +82,6 @@ impl PluginBuilder<PluginBuilderPath> {
 pub struct Plugin {
     pub path: String,
     response_sender: mpsc::Sender<Response>,
-    // response_receiver: mpsc::Receiver<Response>,
     response_receiver: tokio::sync::Mutex<mpsc::Receiver<Response>>,
     progress_sender: Option<mpsc::Sender<u8>>,
     end_sender: Option<mpsc::Sender<()>>,
@@ -183,7 +182,6 @@ impl Plugin {
         Ok(packages)
     }
     async fn start_subcommand(&self, command: &'static str, args: Vec<String>) -> Result<()> {
-        // while self.response_receiver.try_recv().is_ok() {}
         let response_sender = self.response_sender.clone();
         let path = self.path.clone();
         let mut cmd = Command::new("bash")
@@ -196,13 +194,11 @@ impl Plugin {
         let mut lines = BufReader::new(stdout).lines();
         let mut fields: Option<Vec<String>> = None;
         while let Some(line) = lines.next_line().await? {
-            // let line = line.expect("Failed to read line");
             let Some((channel, data_str)) = line.split_once(' ') else {
                 continue;
             };
             match channel {
                 "Package" => {
-                    // let _ = response_sender.send(Response::from(Package::from_json(data_str)));
                     if let Some(fields) = &fields {
                         let data = fields
                             .iter()
