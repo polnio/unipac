@@ -10,13 +10,13 @@ pub use args::Args;
 pub use config::Config;
 pub use dirs::PROJECT_DIRS;
 pub use package::Package;
+use plugin::Event;
 pub use plugin::Plugin;
 
 use crate::prelude::*;
 use crate::spinners::Spinners;
 use anyhow::{Context as _, Result};
 use clap::Parser as _;
-use tokio::select;
 use tokio::sync::mpsc;
 
 #[tokio::main]
@@ -30,12 +30,10 @@ async fn main() -> Result<()> {
         .plugins
         .into_iter()
         .map(|plugin| {
-            let (progress_sender, mut progress_receiver) = mpsc::channel(100);
-            let (end_sender, mut end_receiver) = mpsc::channel(100);
+            let (event_sender, mut event_receiver) = mpsc::channel(100);
             let plugin = Plugin::builder()
                 .path(plugin)
-                .progress_sender(progress_sender)
-                .end_sender(end_sender)
+                .event_sender(event_sender)
                 .build();
             let id = plugin
                 .get_id()
@@ -49,17 +47,17 @@ async fn main() -> Result<()> {
             let spinner = spinners.add(name.clone());
             anyhow::Ok(async move {
                 let pbh = async {
-                    loop {
-                        select! {
-                            _ = end_receiver.recv() => break,
-                            Some(progress) = progress_receiver.recv() => {
+                    while let Some(event) = event_receiver.recv().await {
+                        match event {
+                            Event::End => break,
+                            Event::Progress(progress) => {
                                 spinner.set(progress);
                                 if progress == 100 {
                                     spinner.finish();
                                     break;
                                 }
                             }
-                        };
+                        }
                     }
                 };
                 let ph = async {
