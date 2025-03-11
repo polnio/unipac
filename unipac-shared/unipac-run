@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+echo "unipac-run"
+
+$@ 2>/dev/null
+code=$?
+if [ "$code" -eq 127 ]; then
+  echo "Error Command $1 not found"
+else if [ "$code" -ne 0 ]; then
+  echo "Error Unknown error while executing $1"
+fi
