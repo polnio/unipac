@@ -9,5 +9,4 @@ clap = { version = "4.5.28", features = ["derive"] }
 directories = "6.0.0"
 indicatif = "0.17.11"
 serde = { version = "1.0.217", features = ["derive"] }
-tokio = { version = "1.43.0", features = ["macros", "rt-multi-thread", "sync", "io-util", "process"] }
 toml = "0.8.19"

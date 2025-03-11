@@ -3,24 +3,21 @@ mod config;
 mod dirs;
 mod package;
 mod plugin;
-mod prelude;
 mod spinners;
 
 pub use args::Args;
 pub use config::Config;
 pub use dirs::PROJECT_DIRS;
 pub use package::Package;
-use plugin::Event;
 pub use plugin::Plugin;
 
-use crate::prelude::*;
 use crate::spinners::Spinners;
 use anyhow::{Context as _, Result};
 use clap::Parser as _;
-use tokio::sync::mpsc;
+use plugin::Event;
+use std::sync::mpsc;
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let args = Args::parse();
     let config = Config::from_opt_file(args.config_path)?;
     let spinners = Spinners::new();
@@ -30,43 +27,32 @@ async fn main() -> Result<()> {
         .plugins
         .into_iter()
         .map(|plugin| {
-            let (event_sender, mut event_receiver) = mpsc::channel(100);
+            let (event_sender, event_receiver) = mpsc::channel();
             let plugin = Plugin::builder()
                 .path(plugin)
                 .event_sender(event_sender)
                 .build();
-            let id = plugin
-                .get_id()
-                .await_blocking()
-                .context("Failed to get id")?;
-            let name = plugin
-                .get_name()
-                .await_blocking()
-                .context("Failed to get name")?;
+            let id = plugin.get_id().context("Failed to get id")?;
+            let name = plugin.get_name().context("Failed to get name")?;
             let spinners = spinners.clone();
             let spinner = spinners.add(name.clone());
-            anyhow::Ok(async move {
-                let pbh = async {
-                    while let Some(event) = event_receiver.recv().await {
-                        match event {
-                            Event::End => break,
-                            Event::Progress(progress) => {
-                                spinner.set(progress);
-                                if progress == 100 {
-                                    spinner.finish();
-                                    break;
-                                }
+            let pbh = std::thread::spawn(move || {
+                while let Ok(event) = event_receiver.recv() {
+                    match event {
+                        Event::End => break,
+                        Event::Progress(progress) => {
+                            spinner.set(progress);
+                            if progress == 100 {
+                                spinner.finish();
+                                break;
                             }
                         }
                     }
-                };
-                let ph = async {
-                    plugin
-                        .list_packages()
-                        .await
-                        .context("Failed to list packages")
-                };
-                let (_, packages) = tokio::join!(pbh, ph);
+                }
+            });
+            anyhow::Ok(std::thread::spawn(move || {
+                let packages = plugin.list_packages().context("Failed to list packages");
+                pbh.join().unwrap();
                 match packages {
                     Ok(packages) => Some((id, name, packages)),
                     Err(err) => {
@@ -75,7 +61,7 @@ async fn main() -> Result<()> {
                         None
                     }
                 }
-            })
+            }))
         })
         .filter_map(|r| match r {
             Ok(r) => Some(r),
@@ -85,11 +71,9 @@ async fn main() -> Result<()> {
                 None
             }
         })
-        .to_set()
-        .join_all()
-        .await
+        .collect::<Vec<_>>()
         .into_iter()
-        .filter_map(|r| r)
+        .filter_map(|r| r.join().ok().flatten())
         .collect::<Vec<_>>();
 
     spinners.clear().unwrap();
