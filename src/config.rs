@@ -1,7 +1,8 @@
 use crate::PROJECT_DIRS;
 use anyhow::{Context as _, Result};
 use serde::Deserialize;
-use std::path::{Path, PathBuf};
+use std::borrow::Cow;
+use std::path::Path;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
 pub struct Config {
@@ -21,9 +22,11 @@ impl Config {
         let config = toml::from_str(&contents).context("Failed to parse config file")?;
         Ok(config)
     }
-    pub fn from_opt_file(path: Option<PathBuf>) -> Result<Self> {
+    pub fn from_opt_file(path: Option<&Path>) -> Result<Self> {
         let is_default = path.is_none();
-        let path = path.unwrap_or_else(|| PROJECT_DIRS.config_dir().join("config.toml"));
+        let path = path
+            .map(Cow::from)
+            .unwrap_or_else(|| PROJECT_DIRS.config_dir().join("config.toml").into());
 
         if is_default && !path.exists() {
             return Ok(Config::default());
