@@ -20,7 +20,9 @@ fn main() -> Result<()> {
     let args = Args::parse();
     let config = Config::from_opt_file(args.config_path.as_deref())?;
 
-    commands::list_packages(args, config);
+    match args.command {
+        args::Command::List => commands::list_packages(args, config),
+    }
 
     Ok(())
 }
