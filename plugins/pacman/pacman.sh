@@ -9,7 +9,7 @@ get_name() {
 }
 
 list_packages() {
-  echo "Package name,version"
+  echo "Package Name,Version"
   pacman -Q | tr ' ' , | sed 's/^/Package /'
   echo "Progress 100"
 }

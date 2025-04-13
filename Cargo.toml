@@ -6,7 +6,10 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.95"
 clap = { version = "4.5.28", features = ["derive"] }
+derive_more = { version = "2.0.1", features = ["deref"] }
 directories = "6.0.0"
+indexmap = "2.9.0"
 indicatif = "0.17.11"
 serde = { version = "1.0.217", features = ["derive"] }
+tabled = "0.18.0"
 toml = "0.8.19"

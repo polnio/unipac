@@ -9,7 +9,7 @@ get_name() {
 }
 
 list_packages() {
-  echo "Package name,id,version,description"
+  echo "Package Name,Id,Version,Description"
   echo "Package Example plugin,example,1.2.3,This is an example plugin"
   for i in {1..10}; do
     sleep 0.5

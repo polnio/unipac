@@ -1,7 +1,8 @@
 use crate::plugin::Event;
-use crate::{Args, Config, Plugin, Spinners};
+use crate::{Args, Config, Package, Plugin, Spinners};
 use anyhow::Context as _;
 use std::sync::mpsc;
+use tabled::settings::Style;
 
 pub fn list_packages(_args: Args, config: Config) {
     let spinners = Spinners::new();
@@ -62,9 +63,12 @@ pub fn list_packages(_args: Args, config: Config) {
     spinners.clear().unwrap();
 
     for (id, name, packages) in handles {
-        println!(
-            "------\nid: {}\nname: {}\npackages: {:?}",
-            id, name, packages
-        );
+        if packages.is_empty() {
+            println!("No packages found for {}", name);
+            continue;
+        }
+        let mut table = Package::list_into_tab(packages);
+        table.with(Style::modern_rounded());
+        println!("{}\n{}\n", name, table);
     }
 }
