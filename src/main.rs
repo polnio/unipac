@@ -12,7 +12,6 @@ pub use dirs::PROJECT_DIRS;
 pub use package::Package;
 pub use plugin::Plugin;
 
-use crate::spinners::Spinners;
 use anyhow::Result;
 use clap::Parser as _;
 
@@ -21,7 +20,8 @@ fn main() -> Result<()> {
     let config = Config::from_opt_file(args.config_path.as_deref())?;
 
     match args.command {
-        args::Command::List => commands::list_packages(args, config),
+        args::Command::List => commands::list_packages(config),
+        args::Command::Search { query } => commands::search(config, query),
     }
 
     Ok(())

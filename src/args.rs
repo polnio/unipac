@@ -12,4 +12,5 @@ pub struct Args {
 #[derive(Debug, Clone, PartialEq, Eq, clap::Subcommand)]
 pub enum Command {
     List,
+    Search { query: String },
 }

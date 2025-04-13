@@ -17,4 +17,8 @@ list_packages() {
   done
 }
 
+search() {
+  list_packages
+}
+
 source unipac-run

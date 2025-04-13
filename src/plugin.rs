@@ -114,6 +114,7 @@ fn send_opt<T>(sender: Option<&mpsc::Sender<T>>, value: T) {
 impl_plugin!(pub fn get_id() -> String);
 impl_plugin!(pub fn get_name() -> String);
 impl_plugin!(pub fn list_packages() -> Vec<Package>);
+impl_plugin!(pub fn search(query: String) -> Vec<Package>);
 impl Plugin {
     pub fn builder() -> PluginBuilder<PluginBuilderPathEmpty> {
         PluginBuilder::new()
