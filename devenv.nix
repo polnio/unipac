@@ -2,6 +2,6 @@
 {
   languages.rust.enable = true;
   enterShell = ''
-    export PATH="$PATH:${./unipac-shared}"
+    export PATH="$PATH:$PWD/unipac-shared"
   '';
 }
