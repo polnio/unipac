@@ -51,10 +51,7 @@ pub(self) fn fetch_multiple(
                 pbh.join().unwrap();
                 match packages {
                     Ok(packages) => Ok((id, name, packages)),
-                    Err(err) => {
-                        spinners.clear().unwrap();
-                        Err(anyhow::anyhow!("[{}] Error: {:#}", name, err))
-                    }
+                    Err(err) => Err(anyhow::anyhow!("[{}] {:#}", name, err)),
                 }
             }))
         })

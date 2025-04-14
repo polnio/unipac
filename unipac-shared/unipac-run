@@ -5,6 +5,15 @@ case "$1" in
   get_name) echo "Response $NAME"; exit 0;;
 esac
 
+if [ -n "$DEPENDENCIES" ]; then
+  for dependency in "${DEPENDENCIES[@]}"; do
+    if ! command -v "$dependency" >/dev/null; then
+      echo "Error $dependency not found"
+      exit 1
+    fi
+  done
+fi
+
 $@ 2>/dev/null
 code=$?
 if [ "$code" -eq 127 ]; then

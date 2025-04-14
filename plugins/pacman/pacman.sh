@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+DEPENDENCIES=(pacman)
 
 ID="pacman"
 NAME="Pacman"
