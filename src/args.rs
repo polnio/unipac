@@ -13,4 +13,5 @@ pub struct Args {
 pub enum Command {
     List,
     Search { query: String },
+    Info { pname: String },
 }

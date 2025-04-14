@@ -1,6 +1,8 @@
+mod info;
 mod list_packages;
 mod search;
 
+pub use info::info;
 pub use list_packages::list_packages;
 pub use search::search;
 
@@ -11,10 +13,10 @@ use anyhow::{Context as _, Result};
 use std::sync::mpsc;
 use tabled::settings::Style;
 
-pub(self) fn fetch_multiple(
+fn fetch<T: Send + 'static>(
     config: Config,
-    f: impl Fn(&Plugin) -> Result<Vec<Package>> + Sync + Send + 'static,
-) {
+    f: impl Fn(&Plugin) -> Result<T> + Sync + Send + 'static,
+) -> Vec<Result<(String, String, T)>> {
     let spinners = Spinners::new();
     let f = std::sync::Arc::new(f);
     let handles = config
@@ -62,6 +64,14 @@ pub(self) fn fetch_multiple(
 
     spinners.clear().unwrap();
 
+    handles
+}
+
+pub(self) fn fetch_multiple(
+    config: Config,
+    f: impl Fn(&Plugin) -> Result<Vec<Package>> + Sync + Send + 'static,
+) {
+    let handles = fetch(config, f);
     for handle in handles {
         match handle {
             Ok((_id, name, packages)) => {
@@ -70,6 +80,29 @@ pub(self) fn fetch_multiple(
                     continue;
                 }
                 let mut table = Package::list_into_tab(packages);
+                table.with(Style::modern_rounded());
+                println!("{}\n{}\n", name, table);
+            }
+            Err(err) => {
+                eprintln!("Error: {:#}", err);
+            }
+        }
+    }
+}
+
+pub(self) fn fetch_one(
+    config: Config,
+    f: impl Fn(&Plugin) -> Result<Option<Package>> + Sync + Send + 'static,
+) {
+    let handles = fetch(config, f);
+    for handle in handles {
+        match handle {
+            Ok((_id, name, package)) => {
+                let Some(package) = package else {
+                    println!("Package not found for {}", name);
+                    continue;
+                };
+                let mut table = package.into_tab();
                 table.with(Style::modern_rounded());
                 println!("{}\n{}\n", name, table);
             }

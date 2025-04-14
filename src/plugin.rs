@@ -100,6 +100,9 @@ macro_rules! impl_plugin {
     ($vis:vis fn $name:ident ($($field:ident : $type:ty),*) -> Vec<Package>) => {
         impl_plugin_inner!($vis fn $name ($($field : $type),*) -> Vec<Package>, get_packages);
     };
+    ($vis:vis fn $name:ident ($($field:ident : $type:ty),*) -> Option<Package>) => {
+        impl_plugin_inner!($vis fn $name ($($field : $type),*) -> Option<Package>, get_package);
+    };
     ($vis:vis fn $name:ident ($($field:ident : $type:ty),*) -> String) => {
         impl_plugin_inner!($vis fn $name ($($field : $type),*) -> String, get_response);
     };
@@ -115,6 +118,7 @@ impl_plugin!(pub fn get_id() -> String);
 impl_plugin!(pub fn get_name() -> String);
 impl_plugin!(pub fn list_packages() -> Vec<Package>);
 impl_plugin!(pub fn search(query: String) -> Vec<Package>);
+impl_plugin!(pub fn info(pname: String) -> Option<Package>);
 impl Plugin {
     pub fn builder() -> PluginBuilder<PluginBuilderPathEmpty> {
         PluginBuilder::new()
@@ -171,6 +175,9 @@ impl Plugin {
             }
         }
         Ok(packages)
+    }
+    fn get_package(&self) -> Result<Option<Package>> {
+        self.get_packages().map(|ps| ps.into_iter().nth(0))
     }
     fn start_subcommand(&self, command: &'static str, args: Vec<String>) -> JoinHandle<Result<()>> {
         let response_sender = self.response_sender.clone();

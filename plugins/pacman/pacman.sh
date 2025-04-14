@@ -21,4 +21,16 @@ search() {
   echo "Progress 100"
 }
 
+info() {
+  echo "Package Registry,Name,Version,Description"
+  echo -n "Package "
+  set -o pipefail
+  pacman -Si "$1" | cut -d: -f2 | cut -c2- | head -n4 | paste -sd , -
+  if [ "$?" -eq 1 ]; then
+    echo "Error Package $1 not found"
+    exit 1
+  fi
+  echo "Progress 100"
+}
+
 source unipac-run

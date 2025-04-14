@@ -22,6 +22,7 @@ fn main() -> Result<()> {
     match args.command {
         args::Command::List => commands::list_packages(config),
         args::Command::Search { query } => commands::search(config, query),
+        args::Command::Info { pname } => commands::info(config, pname),
     }
 
     Ok(())
