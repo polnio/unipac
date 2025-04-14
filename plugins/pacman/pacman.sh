@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 
-get_id() {
-  echo "Response pacman"
-}
 
-get_name() {
-  echo "Response Pacman"
-}
+ID="pacman"
+NAME="Pacman"
 
 list_packages() {
   echo "Package Name,Version"

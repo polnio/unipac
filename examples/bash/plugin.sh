@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
 
-get_id() {
-  echo "Response example"
-}
-
-get_name() {
-  echo "Response My bash example plugin"
-}
+ID="example"
+NAME="My bash example plugin"
 
 list_packages() {
   echo "Package Name,Id,Version,Description"

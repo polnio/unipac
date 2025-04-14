@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-echo "unipac-run"
+case "$1" in
+  get_id) echo "Response $ID"; exit 0;;
+  get_name) echo "Response $NAME"; exit 0;;
+esac
 
 $@ 2>/dev/null
 code=$?
