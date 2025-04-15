@@ -1,3 +1,4 @@
+use clap::Parser as _;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, PartialEq, Eq, clap::Parser)]
@@ -7,6 +8,17 @@ pub struct Args {
 
     #[command(subcommand)]
     pub command: Command,
+}
+static mut ARGS: Option<Args> = None;
+impl Args {
+    pub fn init() {
+        unsafe {
+            ARGS = Some(Args::parse());
+        }
+    }
+    pub fn get() -> &'static Args {
+        unsafe { ARGS.as_ref().unwrap_unchecked() }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, clap::Subcommand)]

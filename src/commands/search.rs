@@ -1,8 +1,5 @@
-use crate::Config;
 use anyhow::Context as _;
 
-pub fn search(config: Config, query: String) {
-    super::fetch_multiple(config, move |p| {
-        p.search(query.clone()).context("Failed to search packages")
-    });
+pub fn search(query: &'static str) {
+    super::fetch_multiple(move |p| p.search(query).context("Failed to search packages"));
 }

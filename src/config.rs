@@ -3,7 +3,6 @@ use anyhow::{Context as _, Result};
 use serde::Deserialize;
 use std::borrow::Cow;
 use std::path::Path;
-
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
 pub struct Config {
     #[serde(default)]
@@ -16,13 +15,25 @@ pub struct ConfigGeneral {
     pub plugins: Vec<String>,
 }
 
+static mut CONFIG: Option<Config> = None;
+
 impl Config {
-    pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
+    pub fn init_from_opt_file(path: Option<&Path>) -> Result<()> {
+        let config = Config::from_opt_file(path)?;
+        unsafe {
+            CONFIG = Some(config);
+        }
+        Ok(())
+    }
+    pub fn get() -> &'static Config {
+        unsafe { CONFIG.as_ref().unwrap_unchecked() }
+    }
+    fn from_file(path: impl AsRef<Path>) -> Result<Self> {
         let contents = std::fs::read_to_string(path).context("Failed to read config file")?;
         let config = toml::from_str(&contents).context("Failed to parse config file")?;
         Ok(config)
     }
-    pub fn from_opt_file(path: Option<&Path>) -> Result<Self> {
+    fn from_opt_file(path: Option<&Path>) -> Result<Self> {
         let is_default = path.is_none();
         let path = path
             .map(Cow::from)

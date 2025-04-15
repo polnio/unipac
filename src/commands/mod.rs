@@ -14,19 +14,19 @@ use std::sync::mpsc;
 use tabled::settings::Style;
 
 fn fetch<T: Send + 'static>(
-    config: Config,
     f: impl Fn(&Plugin) -> Result<T> + Sync + Send + 'static,
 ) -> Vec<Result<(String, String, T)>> {
+    let config = Config::get();
     let spinners = Spinners::new();
     let f = std::sync::Arc::new(f);
     let handles = config
         .general
         .plugins
-        .into_iter()
+        .iter()
         .map(|plugin| {
             let (event_sender, event_receiver) = mpsc::channel();
             let plugin = Plugin::builder()
-                .path(plugin)
+                .path(plugin.clone())
                 .event_sender(event_sender)
                 .build();
             let id = plugin.get_id().context("Failed to get id")?;
@@ -67,11 +67,8 @@ fn fetch<T: Send + 'static>(
     handles
 }
 
-pub(self) fn fetch_multiple(
-    config: Config,
-    f: impl Fn(&Plugin) -> Result<Vec<Package>> + Sync + Send + 'static,
-) {
-    let handles = fetch(config, f);
+pub(self) fn fetch_multiple(f: impl Fn(&Plugin) -> Result<Vec<Package>> + Sync + Send + 'static) {
+    let handles = fetch(f);
     for handle in handles {
         match handle {
             Ok((_id, name, packages)) => {
@@ -90,11 +87,8 @@ pub(self) fn fetch_multiple(
     }
 }
 
-pub(self) fn fetch_one(
-    config: Config,
-    f: impl Fn(&Plugin) -> Result<Option<Package>> + Sync + Send + 'static,
-) {
-    let handles = fetch(config, f);
+pub(self) fn fetch_one(f: impl Fn(&Plugin) -> Result<Option<Package>> + Sync + Send + 'static) {
+    let handles = fetch(f);
     for handle in handles {
         match handle {
             Ok((_id, name, package)) => {

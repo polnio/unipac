@@ -88,7 +88,7 @@ macro_rules! impl_plugin_inner {
     ($vis:vis fn $name:ident ($($field:ident : $type:ty),*) -> $return:ty, $getter:ident) => {
         impl Plugin {
             $vis fn $name(&self, $($field: $type),*) -> Result<$return> {
-                let handle = self.start_subcommand(stringify!($name), vec![$($field),*]);
+                let handle = self.start_subcommand(stringify!($name), &[$($field),*]);
                 let packages = self.$getter()?;
                 handle.join().unwrap()?;
                 Ok(packages)
@@ -117,8 +117,8 @@ fn send_opt<T>(sender: Option<&mpsc::Sender<T>>, value: T) {
 impl_plugin!(pub fn get_id() -> String);
 impl_plugin!(pub fn get_name() -> String);
 impl_plugin!(pub fn list_packages() -> Vec<Package>);
-impl_plugin!(pub fn search(query: String) -> Vec<Package>);
-impl_plugin!(pub fn info(pname: String) -> Option<Package>);
+impl_plugin!(pub fn search(query: &str) -> Vec<Package>);
+impl_plugin!(pub fn info(pname: &str) -> Option<Package>);
 impl Plugin {
     pub fn builder() -> PluginBuilder<PluginBuilderPathEmpty> {
         PluginBuilder::new()
@@ -179,13 +179,14 @@ impl Plugin {
     fn get_package(&self) -> Result<Option<Package>> {
         self.get_packages().map(|ps| ps.into_iter().nth(0))
     }
-    fn start_subcommand(&self, command: &'static str, args: Vec<String>) -> JoinHandle<Result<()>> {
+    fn start_subcommand(&self, command: &'static str, args: &[&str]) -> JoinHandle<Result<()>> {
         let response_sender = self.response_sender.clone();
         let path = self.path.clone();
+        let args = args.join(" ");
         std::thread::spawn(move || {
             let mut cmd = Command::new("bash")
                 .arg("-c")
-                .arg(format!("{} {} {}", path, command, args.join(" ")))
+                .arg(format!("{} {} {}", path, command, args))
                 .stdout(Stdio::piped())
                 .spawn()
                 .context("Failed to run plugin")?;

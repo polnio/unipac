@@ -13,16 +13,16 @@ pub use package::Package;
 pub use plugin::Plugin;
 
 use anyhow::Result;
-use clap::Parser as _;
 
 fn main() -> Result<()> {
-    let args = Args::parse();
-    let config = Config::from_opt_file(args.config_path.as_deref())?;
+    Args::init();
+    let args = Args::get();
+    Config::init_from_opt_file(args.config_path.as_deref())?;
 
-    match args.command {
-        args::Command::List => commands::list_packages(config),
-        args::Command::Search { query } => commands::search(config, query),
-        args::Command::Info { pname } => commands::info(config, pname),
+    match &args.command {
+        args::Command::List => commands::list_packages(),
+        args::Command::Search { query } => commands::search(query),
+        args::Command::Info { pname } => commands::info(pname),
     }
 
     Ok(())
