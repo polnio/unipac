@@ -8,6 +8,9 @@ pub struct Args {
 
     #[command(subcommand)]
     pub command: Command,
+
+    #[arg(short, long, value_delimiter = ',')]
+    pub plugins: Vec<String>,
 }
 static mut ARGS: Option<Args> = None;
 impl Args {

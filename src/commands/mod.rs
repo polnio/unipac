@@ -8,7 +8,7 @@ pub use search::search;
 
 use crate::plugin::Event;
 use crate::spinners::Spinners;
-use crate::{Config, Package, Plugin};
+use crate::{Args, Config, Package, Plugin};
 use anyhow::{Context as _, Result};
 use std::sync::mpsc;
 use tabled::settings::Style;
@@ -17,20 +17,30 @@ fn fetch<T: Send + 'static>(
     f: impl Fn(&Plugin) -> Result<T> + Sync + Send + 'static,
 ) -> Vec<Result<(String, String, T)>> {
     let config = Config::get();
+    let args = Args::get();
     let spinners = Spinners::new();
     let f = std::sync::Arc::new(f);
     let handles = config
         .general
         .plugins
         .iter()
-        .map(|plugin| {
+        .filter_map(|plugin| {
             let (event_sender, event_receiver) = mpsc::channel();
             let plugin = Plugin::builder()
                 .path(plugin.clone())
                 .event_sender(event_sender)
                 .build();
-            let id = plugin.get_id().context("Failed to get id")?;
-            let name = plugin.get_name().context("Failed to get name")?;
+            let id = match plugin.get_id().context("Failed to get id") {
+                Ok(id) => id,
+                Err(err) => return Some(Err(err)),
+            };
+            if !args.plugins.is_empty() && !args.plugins.contains(&id) {
+                return None;
+            }
+            let name = match plugin.get_name().context("Failed to get name") {
+                Ok(name) => name,
+                Err(err) => return Some(Err(err)),
+            };
             let spinners = spinners.clone();
             let spinner = spinners.add(name.clone());
             let pbh = std::thread::spawn(move || {
@@ -48,14 +58,14 @@ fn fetch<T: Send + 'static>(
                 }
             });
             let f = f.clone();
-            anyhow::Ok(std::thread::spawn(move || {
+            Some(anyhow::Ok(std::thread::spawn(move || {
                 let packages = f(&plugin);
                 pbh.join().unwrap();
                 match packages {
                     Ok(packages) => Ok((id, name, packages)),
                     Err(err) => Err(anyhow::anyhow!("[{}] {:#}", name, err)),
                 }
-            }))
+            })))
         })
         .collect::<Vec<_>>()
         .into_iter()
