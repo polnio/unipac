@@ -3,6 +3,8 @@ use anyhow::{Context as _, Result};
 use serde::Deserialize;
 use std::borrow::Cow;
 use std::path::Path;
+use std::sync::OnceLock;
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
 pub struct Config {
     #[serde(default)]
@@ -15,25 +17,21 @@ pub struct ConfigGeneral {
     pub plugins: Vec<String>,
 }
 
-static mut CONFIG: Option<Config> = None;
+static CONFIG: OnceLock<Config> = OnceLock::new();
 
 impl Config {
-    pub fn init_from_opt_file(path: Option<&Path>) -> Result<()> {
-        let config = Config::from_opt_file(path)?;
-        unsafe {
-            CONFIG = Some(config);
-        }
-        Ok(())
+    pub fn init(this: Self) {
+        let _ = CONFIG.set(this);
     }
     pub fn get() -> &'static Config {
-        unsafe { CONFIG.as_ref().unwrap_unchecked() }
+        unsafe { CONFIG.get().unwrap_unchecked() }
     }
-    fn from_file(path: impl AsRef<Path>) -> Result<Self> {
+    pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
         let contents = std::fs::read_to_string(path).context("Failed to read config file")?;
         let config = toml::from_str(&contents).context("Failed to parse config file")?;
         Ok(config)
     }
-    fn from_opt_file(path: Option<&Path>) -> Result<Self> {
+    pub fn from_opt_file(path: Option<&Path>) -> Result<Self> {
         let is_default = path.is_none();
         let path = path
             .map(Cow::from)

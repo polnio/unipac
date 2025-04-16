@@ -1,5 +1,5 @@
-use clap::Parser as _;
 use std::path::PathBuf;
+use std::sync::OnceLock;
 
 #[derive(Debug, Clone, PartialEq, Eq, clap::Parser)]
 pub struct Args {
@@ -12,15 +12,16 @@ pub struct Args {
     #[arg(short, long, value_delimiter = ',')]
     pub plugins: Vec<String>,
 }
-static mut ARGS: Option<Args> = None;
+static ARGS: OnceLock<Args> = OnceLock::new();
 impl Args {
-    pub fn init() {
-        unsafe {
-            ARGS = Some(Args::parse());
-        }
+    pub fn init(this: Self) {
+        let _ = ARGS.set(this);
     }
     pub fn get() -> &'static Args {
-        unsafe { ARGS.as_ref().unwrap_unchecked() }
+        unsafe { ARGS.get().unwrap_unchecked() }
+    }
+    pub fn parse() -> Self {
+        clap::Parser::parse()
     }
 }
 

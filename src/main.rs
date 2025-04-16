@@ -15,9 +15,9 @@ pub use plugin::Plugin;
 use anyhow::Result;
 
 fn main() -> Result<()> {
-    Args::init();
+    Args::init(Args::parse());
     let args = Args::get();
-    Config::init_from_opt_file(args.config_path.as_deref())?;
+    Config::init(Config::from_opt_file(args.config_path.as_deref())?);
 
     match &args.command {
         args::Command::List => commands::list_packages(),
