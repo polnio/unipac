@@ -3,7 +3,7 @@
 ID="example"
 NAME="My bash example plugin"
 
-list_packages() {
+unipac_list_packages() {
   echo "Package Name,Id,Version,Description"
   echo "Package Example plugin,example,1.2.3,This is an example plugin"
   for i in {1..10}; do
@@ -12,11 +12,11 @@ list_packages() {
   done
 }
 
-search() {
+unipac_search() {
   list_packages
 }
 
-info() {
+unipac_info() {
   list_packages
 }
 

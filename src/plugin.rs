@@ -86,12 +86,14 @@ pub struct Plugin {
 
 macro_rules! impl_plugin_inner {
     ($vis:vis fn $name:ident ($($field:ident : $type:ty),*) -> $return:ty, $getter:ident) => {
-        impl Plugin {
-            $vis fn $name(&self, $($field: $type),*) -> Result<$return> {
-                let handle = self.start_subcommand(stringify!($name), &[$($field),*]);
-                let packages = self.$getter()?;
-                handle.join().unwrap()?;
-                Ok(packages)
+        paste::paste! {
+            impl Plugin {
+                $vis fn $name(&self, $($field: $type),*) -> Result<$return> {
+                    let handle = self.start_subcommand(stringify!([<unipac_ $name>]), &[$($field),*]);
+                    let packages = self.$getter()?;
+                    handle.join().unwrap()?;
+                    Ok(packages)
+                }
             }
         }
     };

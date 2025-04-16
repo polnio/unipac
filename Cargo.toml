@@ -10,6 +10,7 @@ derive_more = { version = "2.0.1", features = ["deref"] }
 directories = "6.0.0"
 indexmap = "2.9.0"
 indicatif = "0.17.11"
+paste = "1.0.15"
 serde = { version = "1.0.217", features = ["derive"] }
 tabled = "0.18.0"
 toml = "0.8.19"

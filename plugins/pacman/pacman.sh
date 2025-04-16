@@ -5,13 +5,13 @@ DEPENDENCIES=(pacman)
 ID="pacman"
 NAME="Pacman"
 
-list_packages() {
+unipac_list_packages() {
   echo "Package Name,Version"
   pacman -Q | tr ' ' , | sed 's/^/Package /'
   echo "Progress 100"
 }
 
-search() {
+unipac_search() {
   echo "Package Registry,Name,Version,Description"
   pacman -Ss "$1" | while read -r line1 && read -r description; do
     echo -n "Package "
@@ -21,7 +21,7 @@ search() {
   echo "Progress 100"
 }
 
-info() {
+unipac_info() {
   echo "Package Registry,Name,Version,Description"
   echo -n "Package "
   set -o pipefail
