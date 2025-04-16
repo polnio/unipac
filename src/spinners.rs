@@ -30,7 +30,10 @@ impl Spinner {
     pub fn set(&self, progress: u8) {
         self.0.set_position(progress as u64);
     }
-    pub fn finish(&self) {
+    pub fn success(&self) {
         self.0.finish();
+    }
+    pub fn error(&self) {
+        self.0.abandon();
     }
 }

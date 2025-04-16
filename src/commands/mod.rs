@@ -41,16 +41,15 @@ fn fetch<T: Send + 'static>(
                 Ok(name) => name,
                 Err(err) => return Some(Err(err)),
             };
-            let spinners = spinners.clone();
             let spinner = spinners.add(name.clone());
+            let s = spinner.clone();
             let pbh = std::thread::spawn(move || {
                 while let Ok(event) = event_receiver.recv() {
                     match event {
                         Event::End => break,
                         Event::Progress(progress) => {
-                            spinner.set(progress);
+                            s.set(progress);
                             if progress == 100 {
-                                spinner.finish();
                                 break;
                             }
                         }
@@ -62,8 +61,14 @@ fn fetch<T: Send + 'static>(
                 let packages = f(&plugin);
                 pbh.join().unwrap();
                 match packages {
-                    Ok(packages) => Ok((id, name, packages)),
-                    Err(err) => Err(anyhow::anyhow!("[{}] {:#}", name, err)),
+                    Ok(packages) => {
+                        spinner.success();
+                        Ok((id, name, packages))
+                    }
+                    Err(err) => {
+                        spinner.error();
+                        Err(anyhow::anyhow!("[{}] {:#}", name, err))
+                    }
                 }
             })))
         })
@@ -73,7 +78,6 @@ fn fetch<T: Send + 'static>(
         .collect::<Vec<_>>();
 
     spinners.clear().unwrap();
-
     handles
 }
 
