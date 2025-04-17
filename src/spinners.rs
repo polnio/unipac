@@ -1,6 +1,9 @@
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::borrow::Cow;
 use std::io;
+use std::sync::mpsc;
+
+use crate::plugin::Event;
 
 #[derive(Debug, Clone, Default)]
 pub struct Spinners(MultiProgress);
@@ -27,6 +30,19 @@ impl Spinners {
 }
 
 impl Spinner {
+    pub fn watch_events(&self, rx: mpsc::Receiver<Event>) {
+        while let Ok(event) = rx.recv() {
+            match event {
+                Event::End => break,
+                Event::Progress(progress) => {
+                    self.set(progress);
+                    if progress == 100 {
+                        break;
+                    }
+                }
+            }
+        }
+    }
     pub fn set(&self, progress: u8) {
         self.0.set_position(progress as u64);
     }

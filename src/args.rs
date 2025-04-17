@@ -12,6 +12,15 @@ pub struct Args {
     #[arg(short, long, value_delimiter = ',')]
     pub plugins: Vec<String>,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, clap::Subcommand)]
+pub enum Command {
+    List,
+    Search { query: String },
+    Info { pname: String },
+    Install { pname: String },
+}
+
 static ARGS: OnceLock<Args> = OnceLock::new();
 impl Args {
     pub fn init(this: Self) {
@@ -23,11 +32,4 @@ impl Args {
     pub fn parse() -> Self {
         clap::Parser::parse()
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, clap::Subcommand)]
-pub enum Command {
-    List,
-    Search { query: String },
-    Info { pname: String },
 }

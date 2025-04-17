@@ -99,6 +99,9 @@ macro_rules! impl_plugin_inner {
     };
 }
 macro_rules! impl_plugin {
+    ($vis:vis fn $name:ident ($($field:ident : $type:ty),*)) => {
+        impl_plugin_inner!($vis fn $name ($($field : $type),*) -> (), get_nothing);
+    };
     ($vis:vis fn $name:ident ($($field:ident : $type:ty),*) -> Vec<Package>) => {
         impl_plugin_inner!($vis fn $name ($($field : $type),*) -> Vec<Package>, get_packages);
     };
@@ -121,6 +124,8 @@ impl_plugin!(pub fn get_name() -> String);
 impl_plugin!(pub fn list_packages() -> Vec<Package>);
 impl_plugin!(pub fn search(query: &str) -> Vec<Package>);
 impl_plugin!(pub fn info(pname: &str) -> Option<Package>);
+impl_plugin!(pub fn pre_install(pname: &str) -> Vec<Package>);
+impl_plugin!(pub fn install(pname: &str));
 impl Plugin {
     pub fn builder() -> PluginBuilder<PluginBuilderPathEmpty> {
         PluginBuilder::new()
@@ -180,6 +185,23 @@ impl Plugin {
     }
     fn get_package(&self) -> Result<Option<Package>> {
         self.get_packages().map(|ps| ps.into_iter().nth(0))
+    }
+    fn get_nothing(&self) -> Result<()> {
+        while let Ok(response) = self.response_receiver.recv() {
+            match response {
+                Response::Progress(progress) => {
+                    send_opt(self.event_sender.as_ref(), Event::Progress(progress));
+                    if progress == 100 {
+                        break;
+                    }
+                }
+                Response::End => {
+                    send_opt(self.event_sender.as_ref(), Event::End);
+                }
+                _ => {}
+            }
+        }
+        Ok(())
     }
     fn start_subcommand(&self, command: &'static str, args: &[&str]) -> JoinHandle<Result<()>> {
         let response_sender = self.response_sender.clone();

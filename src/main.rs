@@ -23,6 +23,7 @@ fn main() -> Result<()> {
         args::Command::List => commands::list_packages(),
         args::Command::Search { query } => commands::search(query),
         args::Command::Info { pname } => commands::info(pname),
+        args::Command::Install { pname } => commands::install(pname),
     }
 
     Ok(())

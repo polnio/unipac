@@ -1,19 +1,20 @@
 mod info;
+mod install;
 mod list_packages;
 mod search;
 
 pub use info::info;
+pub use install::install;
 pub use list_packages::list_packages;
 pub use search::search;
 
-use crate::plugin::Event;
 use crate::spinners::Spinners;
 use crate::{Args, Config, Package, Plugin};
-use anyhow::{Context as _, Result};
+use anyhow::{bail, Context as _, Result};
 use std::sync::mpsc;
 use tabled::settings::Style;
 
-fn fetch<T: Send + 'static>(
+pub(self) fn fetch<T: Send + 'static>(
     f: impl Fn(&Plugin) -> Result<T> + Sync + Send + 'static,
 ) -> Vec<Result<(String, String, T)>> {
     let config = Config::get();
@@ -43,19 +44,7 @@ fn fetch<T: Send + 'static>(
             };
             let spinner = spinners.add(name.clone());
             let s = spinner.clone();
-            let pbh = std::thread::spawn(move || {
-                while let Ok(event) = event_receiver.recv() {
-                    match event {
-                        Event::End => break,
-                        Event::Progress(progress) => {
-                            s.set(progress);
-                            if progress == 100 {
-                                break;
-                            }
-                        }
-                    }
-                }
-            });
+            let pbh = std::thread::spawn(move || s.watch_events(event_receiver));
             let f = f.clone();
             Some(anyhow::Ok(std::thread::spawn(move || {
                 let packages = f(&plugin);
@@ -79,6 +68,56 @@ fn fetch<T: Send + 'static>(
 
     spinners.clear().unwrap();
     handles
+}
+
+pub(self) fn fetch_id<T>(
+    id: String,
+    f: impl Fn(&Plugin) -> Result<T>,
+) -> Result<(String, String, T)> {
+    let args = Args::get();
+    if !args.plugins.is_empty() && !args.plugins.contains(&id) {
+        bail!("Plugin {} not enabled", id);
+    }
+    let config = Config::get();
+    let (plugin, event_receiver) = config
+        .general
+        .plugins
+        .iter()
+        .find_map(|plugin| {
+            let (event_sender, event_receiver) = mpsc::channel();
+            let plugin = Plugin::builder()
+                .path(plugin.clone())
+                .event_sender(event_sender)
+                .build();
+            match plugin.get_id().context("Failed to get id") {
+                Ok(i) if i == id => Some((plugin, event_receiver)),
+                Ok(_) => None,
+                Err(err) => {
+                    eprintln!("Error: {:#}", err);
+                    None
+                }
+            }
+        })
+        .context("Failed to find plugin")?;
+
+    let name = plugin.get_name().context("Failed to get name")?;
+
+    let spinners = Spinners::new();
+    let spinner = spinners.add(name.clone());
+    let s = spinner.clone();
+    let pbh = std::thread::spawn(move || s.watch_events(event_receiver));
+    let packages = f(&plugin);
+    pbh.join().unwrap();
+    match packages {
+        Ok(packages) => {
+            spinner.success();
+            Ok((id, name, packages))
+        }
+        Err(err) => {
+            spinner.error();
+            Err(anyhow::anyhow!("[{}] {:#}", name, err))
+        }
+    }
 }
 
 pub(self) fn fetch_multiple(f: impl Fn(&Plugin) -> Result<Vec<Package>> + Sync + Send + 'static) {

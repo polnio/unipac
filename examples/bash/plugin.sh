@@ -20,4 +20,14 @@ unipac_info() {
   list_packages
 }
 
+unipac_pre_install() {
+  echo "Package Id,Version"
+  echo "Package example,1.2.3"
+  echo "Progress 100"
+}
+
+unipac_install() {
+  echo "Progress 100"
+}
+
 source unipac-run

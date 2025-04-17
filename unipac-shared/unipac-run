@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 case "$1" in
-  get_id) echo "Response $ID"; exit 0;;
-  get_name) echo "Response $NAME"; exit 0;;
+  unipac_get_id) echo "Response $ID"; exit 0;;
+  unipac_get_name) echo "Response $NAME"; exit 0;;
 esac
 
 if [ -n "$DEPENDENCIES" ]; then
