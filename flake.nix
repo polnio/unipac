@@ -48,13 +48,13 @@
             src = ./unipac-shared;
             buildPhase = "cp * $out/bin";
           };
-          plugins = [ "pacman" ];
 
           buildBash =
             {
               name,
               src,
               buildPhase,
+              buildInputs ? [ ],
               args ? { },
             }:
             pkgs.stdenvNoCC.mkDerivation (
@@ -67,13 +67,16 @@
                   ${buildPhase}
                 '';
                 strictDeps = true;
-                buildInputs = with pkgs; [ bash ];
+                buildInputs = [ pkgs.bash ] ++ buildInputs;
               }
               // args
             );
 
           mkPlugin =
-            name:
+            {
+              name,
+              buildInputs ? [ ],
+            }:
             buildBash {
               name = "unipac-plugin-${name}";
               src = ./plugins/${name};
@@ -83,24 +86,34 @@
                 installPhase = ''
                   mkdir -p $out/bin
                   wrapProgram $out/bin/unipac-plugin-${name} \
-                    --prefix PATH : ${unipac-shared}/bin
+                    --prefix PATH : ${lib.makeBinPath buildInputs}
                 '';
               };
+              buildInputs = buildInputs ++ [ unipac-shared ];
             };
-          pluginsPkgs = lib.genAttrs plugins mkPlugin;
         in
         {
           inherit unipac unipac-shared;
           default = unipac;
-          unipac-plugin-pacman = mkPlugin "pacman";
+          unipac-plugin-pacman = mkPlugin { name = "pacman"; };
+          unipac-plugin-nix-profile = mkPlugin {
+            name = "nix-profile";
+            buildInputs = with pkgs; [
+              jq
+              nix-search-cli
+            ];
+          };
         }
-        // pluginsPkgs
       );
 
       devShells = forAllSystems (
-        { craneLib, ... }:
+        { pkgs, craneLib, ... }:
         {
           default = craneLib.devShell {
+            packages = with pkgs; [
+              jq
+              nix-search-cli
+            ];
             shellHook = ''
               export PATH="$PATH:$PWD/unipac-shared"
             '';
