@@ -19,6 +19,7 @@ pub enum Command {
     Search { query: String },
     Info { pname: String },
     Install { pname: String },
+    Remove { pname: String },
 }
 
 static ARGS: OnceLock<Args> = OnceLock::new();

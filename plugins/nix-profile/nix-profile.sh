@@ -34,4 +34,9 @@ unipac_install() {
   echo "Progress 100"
 }
 
+unipac_remove() {
+  nix profile remove "$1"
+  echo "Progress 100"
+}
+
 source unipac-run

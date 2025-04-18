@@ -63,6 +63,30 @@ unipac_install() {
       echo "Progress $(($installed * 100 / $total))"
     fi
   done
+  echo "Progress 100"
+}
+
+unipac_remove() {
+  step=0
+  total=0
+  installed=0
+
+  pacman -Rs --noconfirm "$1" 2>&1 | while read -r line; do
+    if [[ -z "$line" ]]; then
+      step=$((step + 1))
+      continue
+    fi
+
+    if [[ $step -eq 1 && "$line" =~ ^Package\ \(([0-9]+)\) ]]; then
+      total=${BASH_REMATCH[1]}
+    fi
+
+    if [[ $step -eq 4 && "$line" = removing\ * ]]; then
+      installed=$((installed + 1))
+      echo "Progress $(($installed * 100 / $total))"
+    fi
+  done
+  echo "Progress 100"
 }
 
 source unipac-run

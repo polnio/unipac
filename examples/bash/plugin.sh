@@ -30,4 +30,8 @@ unipac_install() {
   echo "Progress 100"
 }
 
+unipac_remove() {
+  echo "Progress 100"
+}
+
 source unipac-run

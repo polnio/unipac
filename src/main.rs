@@ -24,6 +24,7 @@ fn main() -> Result<()> {
         args::Command::Search { query } => commands::search(query),
         args::Command::Info { pname } => commands::info(pname),
         args::Command::Install { pname } => commands::install(pname),
+        args::Command::Remove { pname } => commands::remove(pname),
     }
 
     Ok(())
