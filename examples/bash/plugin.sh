@@ -14,11 +14,11 @@ unipac_list_packages() {
 }
 
 unipac_search() {
-  list_packages
+  unipac_list_packages
 }
 
 unipac_info() {
-  list_packages
+  unipac_list_packages
 }
 
 unipac_pre_install() {
