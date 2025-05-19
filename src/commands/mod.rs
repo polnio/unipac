@@ -126,9 +126,15 @@ pub(self) fn fetch_id<T>(
         .context("Failed to find plugin")?;
 
     let name = plugin.get_name().context("Failed to get name")?;
+    let color = plugin.get_color().unwrap_or_default();
 
     let spinners = Spinners::new();
-    let spinner = spinners.add(name.clone());
+    let style = if args.colors && !color.is_empty() {
+        console::Style::from_dotted_str(&color)
+    } else {
+        console::Style::default()
+    };
+    let spinner = spinners.add(style.apply_to(&name).to_string());
     let s = spinner.clone();
     let pbh = std::thread::spawn(move || s.watch_events(event_receiver));
     let packages = f(&plugin);

@@ -22,3 +22,4 @@ if [ "$code" -eq 127 ]; then
 elif [ "$code" -ne 0 ]; then
   echo "Error Unknown error while executing $1"
 fi
+return $code

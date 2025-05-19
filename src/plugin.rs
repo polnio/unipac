@@ -1,6 +1,6 @@
 use crate::{Package, Result};
 use anyhow::{bail, Context as _};
-use std::io::{BufRead as _, BufReader};
+use std::io::{BufRead as _, BufReader, Read};
 use std::process::{Command, Stdio};
 use std::sync::mpsc;
 use std::thread::JoinHandle;
@@ -200,6 +200,10 @@ impl Plugin {
                 Response::End => {
                     send_opt(self.event_sender.as_ref(), Event::End);
                 }
+                Response::Error(error) => {
+                    send_opt(self.event_sender.as_ref(), Event::End);
+                    bail!(error)
+                }
                 _ => {}
             }
         }
@@ -214,6 +218,7 @@ impl Plugin {
                 .arg("-c")
                 .arg(format!("{} {} {}", path, command, args))
                 .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
                 .spawn()
                 .context("Failed to run plugin")?;
             let stdout = cmd.stdout.as_mut().context("Failed to get stdout")?;
@@ -257,7 +262,24 @@ impl Plugin {
                 }
             }
 
-            cmd.wait().expect("Failed to wait for plugin");
+            let status = cmd.wait().expect("Failed to wait for plugin");
+            if !status.success() {
+                let stderr = cmd.stderr.as_mut().context("Failed to get stderr")?;
+                let mut buffer = Vec::new();
+                match stderr.read_to_end(&mut buffer) {
+                    Ok(n) if n != 0 => {
+                        let message = String::from_utf8_lossy(&buffer);
+                        bail!(
+                            "Plugin failed with status {} and error: {}",
+                            status,
+                            message
+                        );
+                    }
+                    _ => {
+                        bail!("Plugin failed with status {}", status);
+                    }
+                }
+            }
             Ok(())
         })
     }

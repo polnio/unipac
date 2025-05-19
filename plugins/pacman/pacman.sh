@@ -49,6 +49,7 @@ unipac_install() {
   total=0
   installed=0
 
+  set -o pipefail
   pacman -S --noconfirm "$1" 2>&1 | while read -r line; do
     if [[ -z "$line" ]]; then
       step=$((step + 1))
@@ -64,7 +65,9 @@ unipac_install() {
       echo "Progress $(($installed * 100 / $total))"
     fi
   done
+  code=$?
   echo "Progress 100"
+  return $code
 }
 
 unipac_remove() {
