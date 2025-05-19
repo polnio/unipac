@@ -20,11 +20,12 @@ pub fn install(pname: &'static str) {
 
     let packages = handles
         .iter()
-        .flat_map(|(id, name, packages)| {
-            packages.into_iter().filter_map(move |package| {
+        .flat_map(|result| {
+            let super::PluginResult { data, id, name, .. } = result;
+            data.into_iter().filter_map(move |package| {
                 Some(InstallPackage {
-                    plugin_id: id,
-                    plugin_name: name,
+                    plugin_id: &id,
+                    plugin_name: &name,
                     package_id: package.get("Id")?,
                     package_version: package.get("Version")?,
                 })

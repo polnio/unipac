@@ -4,6 +4,7 @@ DEPENDENCIES=(pacman)
 
 ID="pacman"
 NAME="Pacman"
+COLOR="blue"
 
 unipac_list_packages() {
   echo "Package Name,Version"

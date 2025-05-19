@@ -4,6 +4,7 @@ DEPENDENCIES=(nix nix-search jq)
 
 ID="nix-profile"
 NAME="Nix (Profile)"
+COLOR="yellow"
 
 unipac_list_packages() {
   echo "Package Name,Version"

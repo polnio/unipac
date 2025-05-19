@@ -3,6 +3,7 @@
 case "$1" in
   unipac_get_id) echo "Response $ID"; exit 0;;
   unipac_get_name) echo "Response $NAME"; exit 0;;
+  unipac_get_color) echo "Response $COLOR"; exit 0;;
 esac
 
 if [ -n "$DEPENDENCIES" ]; then

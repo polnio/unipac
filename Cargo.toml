@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.95"
 clap = { version = "4.5.28", features = ["derive"] }
+console = "0.15.11"
 derive_more = { version = "2.0.1", features = ["deref"] }
 dialoguer = { version = "0.11.0", default-features = false }
 directories = "6.0.0"

@@ -16,9 +16,16 @@ use anyhow::{bail, Context as _, Result};
 use std::sync::mpsc;
 use tabled::settings::Style;
 
+struct PluginResult<T> {
+    id: String,
+    name: String,
+    color: String,
+    data: T,
+}
+
 pub(self) fn fetch<T: Send + 'static>(
     f: impl Fn(&Plugin) -> Result<T> + Sync + Send + 'static,
-) -> Vec<Result<(String, String, T)>> {
+) -> Vec<Result<PluginResult<T>>> {
     let config = Config::get();
     let args = Args::get();
     let spinners = Spinners::new();
@@ -44,7 +51,16 @@ pub(self) fn fetch<T: Send + 'static>(
                 Ok(name) => name,
                 Err(err) => return Some(Err(err)),
             };
-            let spinner = spinners.add(name.clone());
+            let color = match plugin.get_color().context("Failed to get color") {
+                Ok(color) => color,
+                Err(err) => return Some(Err(err)),
+            };
+            let style = if args.colors {
+                console::Style::from_dotted_str(&color)
+            } else {
+                console::Style::default()
+            };
+            let spinner = spinners.add(style.apply_to(&name).to_string());
             let s = spinner.clone();
             let pbh = std::thread::spawn(move || s.watch_events(event_receiver));
             let f = f.clone();
@@ -54,11 +70,18 @@ pub(self) fn fetch<T: Send + 'static>(
                 match packages {
                     Ok(packages) => {
                         spinner.success();
-                        Ok((id, name, packages))
+                        // Ok((id, name, packages))
+                        Ok(PluginResult {
+                            id,
+                            name,
+                            color,
+                            data: packages,
+                        })
                     }
                     Err(err) => {
                         spinner.error();
-                        Err(anyhow::anyhow!("[{}] {:#}", name, err))
+                        let message = format!("[{}] {:#}", name, err);
+                        Err(anyhow::anyhow!("{}", style.apply_to(message)))
                     }
                 }
             })))
@@ -124,19 +147,32 @@ pub(self) fn fetch_id<T>(
 
 pub(self) fn fetch_multiple(f: impl Fn(&Plugin) -> Result<Vec<Package>> + Sync + Send + 'static) {
     let handles = fetch(f);
+    let args = Args::get();
     for handle in handles {
         match handle {
-            Ok((_id, name, packages)) => {
-                if packages.is_empty() {
-                    println!("No packages found for {}", name);
+            Ok(result) => {
+                let style = if args.colors {
+                    console::Style::from_dotted_str(&result.color)
+                } else {
+                    console::Style::default()
+                };
+                if result.data.is_empty() {
+                    let message = format!("No packages found for {}", result.name);
+                    println!("{}", style.apply_to(message));
                     continue;
                 }
-                let mut table = Package::list_into_tab(packages);
+                let mut table = Package::list_into_tab(result.data);
                 table.with(Style::modern_rounded());
-                println!("{}\n{}\n", name, table);
+                let str = format!("{}\n{}\n", result.name, table);
+                println!("{}", style.apply_to(str));
             }
             Err(err) => {
-                eprintln!("Error: {:#}", err);
+                let error = if args.colors {
+                    console::style("Error").red().to_string()
+                } else {
+                    "Error".to_owned()
+                };
+                eprintln!("{}: {:#}", error, err);
             }
         }
     }
@@ -146,14 +182,14 @@ pub(self) fn fetch_one(f: impl Fn(&Plugin) -> Result<Option<Package>> + Sync + S
     let handles = fetch(f);
     for handle in handles {
         match handle {
-            Ok((_id, name, package)) => {
-                let Some(package) = package else {
-                    println!("Package not found for {}", name);
+            Ok(result) => {
+                let Some(package) = result.data else {
+                    println!("Package not found for {}", result.name);
                     continue;
                 };
                 let mut table = package.into_tab();
                 table.with(Style::modern_rounded());
-                println!("{}\n{}\n", name, table);
+                println!("{}\n{}\n", result.name, table);
             }
             Err(err) => {
                 eprintln!("Error: {:#}", err);

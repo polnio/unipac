@@ -1,3 +1,4 @@
+use clap::ArgAction;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
@@ -5,6 +6,14 @@ use std::sync::OnceLock;
 pub struct Args {
     #[arg(short, long)]
     pub config_path: Option<PathBuf>,
+
+    #[arg(
+        long,
+        action = ArgAction::Set,
+        num_args = 0..=1,
+        default_value_t = true,
+    )]
+    pub colors: bool,
 
     #[command(subcommand)]
     pub command: Command,

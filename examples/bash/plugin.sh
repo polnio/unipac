@@ -2,6 +2,7 @@
 
 ID="example"
 NAME="My bash example plugin"
+COLOR="green"
 
 unipac_list_packages() {
   echo "Package Name,Id,Version,Description"
