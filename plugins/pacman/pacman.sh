@@ -26,7 +26,7 @@ unipac_info() {
   echo "Package Registry,Name,Version,Description"
   echo -n "Package "
   set -o pipefail
-  pacman -Si "$1" | cut -d: -f2 | cut -c2- | head -n4 | paste -sd , -
+  pacman -Si "$1" | cut -d: -f2- | cut -c2- | head -n4 | paste -sd , -
   if [ "$?" -eq 1 ]; then
     echo "Error Package $1 not found"
     exit 1
@@ -37,7 +37,7 @@ unipac_info() {
 unipac_pre_install() {
   echo "Package Id,Version"
   set -o pipefail
-  data=$(pacman -Si "$1" | cut -d: -f2 | cut -c2- | head -n3 | paste -sd , - | sed 's/,/\//')
+  data=$(pacman -Si "$1" | cut -d: -f2- | cut -c2- | head -n3 | paste -sd , - | sed 's/,/\//')
   if [ "$?" -eq 0 ]; then
     echo "Package $data"
   fi
