@@ -128,6 +128,8 @@ impl_plugin!(pub fn info(pname: &str) -> Option<Package>);
 impl_plugin!(pub fn pre_install(pname: &str) -> Vec<Package>);
 impl_plugin!(pub fn install(pname: &str));
 impl_plugin!(pub fn remove(pname: &str));
+impl_plugin!(pub fn list_updates() -> Vec<Package>);
+impl_plugin!(pub fn update());
 impl Plugin {
     pub fn builder() -> PluginBuilder<PluginBuilderPathEmpty> {
         PluginBuilder::new()

@@ -1,14 +1,18 @@
 mod info;
 mod install;
 mod list_packages;
+mod list_updates;
 mod remove;
 mod search;
+mod update;
 
 pub use info::info;
 pub use install::install;
 pub use list_packages::list_packages;
+pub use list_updates::list_updates;
 pub use remove::remove;
 pub use search::search;
+pub use update::update;
 
 use crate::spinners::Spinners;
 use crate::{Args, Config, Package, Plugin};

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DEPENDENCIES=(pacman)
+DEPENDENCIES=(pacman checkupdates fakeroot)
 
 ID="pacman"
 NAME="Pacman"
@@ -44,13 +44,13 @@ unipac_pre_install() {
   echo "Progress 100"
 }
 
-unipac_install() {
+__unipac_pacman_execute() {
   step=0
   total=0
   installed=0
 
   set -o pipefail
-  pacman -S --noconfirm "$1" 2>&1 | while read -r line; do
+  pacman $@ 2>&1 | while read -r line; do
     if [[ -z "$line" ]]; then
       step=$((step + 1))
       continue
@@ -68,6 +68,10 @@ unipac_install() {
   code=$?
   echo "Progress 100"
   return $code
+}
+
+unipac_install() {
+  __unipac_pacman_execute -S "$1" --noconfirm
 }
 
 unipac_remove() {
@@ -91,6 +95,16 @@ unipac_remove() {
     fi
   done
   echo "Progress 100"
+}
+
+unipac_list_updates() {
+  echo "Package Name,Old version,New version"
+  checkupdates --nocolor | cut -d ' ' -f1,2,4 | tr ' ' , | sed 's/^/Package /'
+  echo "Progress 100"
+}
+
+unipac_update() {
+  __unipac_pacman_execute -Syu --noconfirm
 }
 
 source unipac-run

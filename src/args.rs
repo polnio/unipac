@@ -24,11 +24,26 @@ pub struct Args {
 
 #[derive(Debug, Clone, PartialEq, Eq, clap::Subcommand)]
 pub enum Command {
-    List,
-    Search { query: String },
-    Info { pname: String },
-    Install { pname: String },
-    Remove { pname: String },
+    List {
+        #[arg(short, long)]
+        updates: bool,
+    },
+    Search {
+        query: String,
+    },
+    Info {
+        pname: String,
+    },
+    Install {
+        pname: String,
+    },
+    Remove {
+        pname: String,
+    },
+    Update {
+        #[arg(short, long)]
+        list: bool,
+    },
 }
 
 static ARGS: OnceLock<Args> = OnceLock::new();

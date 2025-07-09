@@ -40,4 +40,13 @@ unipac_remove() {
   echo "Progress 100"
 }
 
+unipac_list_updates() {
+  echo "Error unipac_list_updates not implemented"
+}
+
+unipac_update() {
+  nix profile upgrade --all
+  echo "Progress 100"
+}
+
 source unipac-run

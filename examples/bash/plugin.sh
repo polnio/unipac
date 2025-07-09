@@ -35,4 +35,12 @@ unipac_remove() {
   echo "Progress 100"
 }
 
+unipac_list_updates() {
+  unipac_pre_install
+}
+
+unipac_update() {
+  echo "Error unipac_update not implemented"
+}
+
 source unipac-run
