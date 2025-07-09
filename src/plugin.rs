@@ -137,7 +137,7 @@ impl Plugin {
         Self {
             path,
             response_sender,
-            response_receiver: response_receiver.into(),
+            response_receiver,
             event_sender,
         }
     }

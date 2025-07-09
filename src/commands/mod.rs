@@ -203,3 +203,12 @@ pub(self) fn fetch_one(f: impl Fn(&Plugin) -> Result<Option<Package>> + Sync + S
         }
     }
 }
+
+pub(self) fn fetch_nothing(f: impl Fn(&Plugin) -> Result<()> + Sync + Send + 'static) {
+    let handles = fetch(f);
+    for handle in handles {
+        if let Err(err) = handle {
+            eprintln!("Error: {:#}", err);
+        }
+    }
+}
