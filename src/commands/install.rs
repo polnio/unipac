@@ -14,6 +14,7 @@ struct InstallPackage<'a> {
 }
 
 pub fn install(pname: &'static str) {
+    crate::run_as_root();
     let handles = super::fetch(move |p| p.pre_install(pname).context("Failed to check packages"));
 
     let (handles, errors): (Vec<_>, Vec<_>) = handles.into_iter().partition_result();

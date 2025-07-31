@@ -4,6 +4,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
 pub fn update() {
+    crate::run_as_root();
     let n = Arc::new(AtomicUsize::new(0));
     let nn = Arc::clone(&n);
     super::fetch_multiple(move |p| {

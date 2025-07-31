@@ -14,6 +14,10 @@ pub use plugin::Plugin;
 
 use anyhow::Result;
 
+pub fn run_as_root() {
+    let _ = sudo::with_env(&["CARGO_MANIFEST_DIR"]); // This env is needed for testing
+}
+
 fn main() -> Result<()> {
     Args::init(Args::parse());
     let args = Args::get();

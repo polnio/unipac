@@ -15,5 +15,6 @@ indicatif = "0.17.11"
 itertools = "0.14.0"
 paste = "1.0.15"
 serde = { version = "1.0.217", features = ["derive"] }
+sudo = "0.6.0"
 tabled = "0.18.0"
 toml = "0.8.19"
